@@ -1,172 +1,27 @@
-/* ============================
-   1. Google Fonts (Typography)
-   ============================ */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,700&family=Inter:wght@300;400;500;600;700&display=swap');
-
-/* ============================
-   2. Tailwind & HeroUI
-   ============================ */
 @import "tailwindcss";
-@import "@heroui/styles";
+@import "@heroui/styles"; 
 
-/* ============================
-   3. Custom Design Tokens (Root)
-   ============================ */
 :root {
-  /* ----- প্রাইমারি ব্র্যান্ড কালার (উষ্ণ আর্থি) ----- */
-  --color-primary: #C68A5C;        /* গোল্ডেন ব্রাউন - বাটন, হাইলাইট */
-  --color-primary-hover: #b07a4e;  /* ডার্কার ভার্সন */
-  --color-secondary: #3D2B1F;      /* ডার্ক ব্রাউন - টেক্সট, হেডার */
-  --color-background: #FBF7F0;     /* ক্রিম - ক্যানভাস ব্যাকগ্রাউন্ড */
-  --color-surface: #FFFFFF;        /* সাদা - কার্ড, মোডাল */
-  
-  /* ----- এক্সট্রা কালার (ডিজিটাল/ফিজিক্যাল ব্যাজ) ----- */
-  --color-digital: #2A9D8F;        /* টিল - ডিজিটাল বই */
-  --color-physical: #E76F51;       /* পিচ - ফিজিক্যাল বই */
-
-  /* ----- টাইপোগ্রাফি ----- */
-  --font-heading: 'Playfair Display', serif;
-  --font-body: 'Inter', sans-serif;
-
-  /* ----- স্পেসিং ও শ্যাডো ----- */
-  --radius-card: 16px;
-  --shadow-card: 0 8px 24px rgba(61, 43, 31, 0.08);
-  --shadow-hover: 0 16px 40px rgba(61, 43, 31, 0.15);
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --background: #ffffff;
+  --foreground: #171717;
 }
 
-/* ============================
-   4. ডার্ক মোড (প্রিফারেন্স অনুযায়ী)
-   ============================ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-background: #1A1410;    /* গাঢ় আর্থি */
-    --color-surface: #2A221C;       /* কার্ডের জন্য হালকা গাঢ় */
-    --color-secondary: #F0E6D8;     /* টেক্সট হালকা করা */
-    --color-primary: #D99B6C;       /* একটু ব্রাইটার গোল্ডেন */
-    --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.4);
-    --shadow-hover: 0 16px 40px rgba(0, 0, 0, 0.6);
+    --background: #0a0a0a;
+    --foreground: #ededed;
   }
 }
 
-/* ============================
-   5. বেসিক রিসেট ও বডি স্টাইল
-   ============================ */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
 body {
-  background-color: var(--color-background);
-  color: var(--color-secondary);
-  font-family: var(--font-body);
-  font-weight: 400;
-  line-height: 1.6;
-  transition: background-color 0.3s ease, color 0.3s ease;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* ============================
-   6. হেডিং টাইপোগ্রাফি
-   ============================ */
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  color: var(--color-secondary);
-}
-
-h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); }
-h2 { font-size: clamp(2rem, 4vw, 3rem); }
-h3 { font-size: clamp(1.5rem, 2.5vw, 2rem); }
-
-/* ============================
-   7. লিংক ও বাটন বেস
-   ============================ */
-a {
-  color: var(--color-primary);
-  text-decoration: none;
-  transition: var(--transition);
-}
-a:hover {
-  color: var(--color-primary-hover);
-}
-
-button {
-  cursor: pointer;
-  font-family: var(--font-body);
-  transition: var(--transition);
-}
-
-/* ============================
-   8. স্ক্রোলবার কাস্টমাইজ (উইন্ডোজ/ম্যাক)
-   ============================ */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: rgba(61, 43, 31, 0.05);
-  border-radius: 10px;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--color-primary);
-  border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary-hover);
-}
-
-/* ============================
-   9. কিছু ইউটিলিটি ক্লাস (Tailwind-এর সঙ্গে কাজ করবে)
-   ============================ */
-.glass {
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px rgba(61, 43, 31, 0.08);
-}
-
-.dark .glass {
-  background: rgba(42, 34, 28, 0.6);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.book-card {
-  background: var(--color-surface);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
-  transition: var(--transition);
-}
-.book-card:hover {
-  transform: translateY(-6px) scale(1.01);
-  box-shadow: var(--shadow-hover);
-}
-
-/* ফ্লোটিং অ্যানিমেশন (Framer Motion-এর সঙ্গে ব্যবহার করতে পারেন) */
-@keyframes float {
-  0%   { transform: translateY(0px); }
-  50%  { transform: translateY(-12px); }
-  100% { transform: translateY(0px); }
-}
-.animate-float {
-  animation: float 4s ease-in-out infinite;
-}
-
-/* ফেড-ইন অ্যানিমেশন */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-in {
-  animation: fadeInUp 0.7s ease-out forwards;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
 }

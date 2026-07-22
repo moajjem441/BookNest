@@ -1,342 +1,335 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  FaHome, 
-  FaBook, 
-  FaInfoCircle, 
-  FaEnvelope, 
-  FaSignInAlt, 
-  FaUserPlus,
-  FaBars,
-  FaTimes,
-  FaUser,
-  FaPlus,
-  FaChartBar,
-  FaSignOutAlt,
-  FaCog
-} from "react-icons/fa";
-import Image from "next/image";
+  BookOpen, 
+  Bell, 
+  Menu, 
+  X, 
+  User, 
+  LayoutDashboard, 
+  Bookmark, 
+  LogOut, 
+  LogIn
+} from "lucide-react";
 
-// ==================== টাইপ ডিফিনেশন ====================
-type NavItem = {
+interface NavItem {
   label: string;
   href: string;
-  icon?: React.ReactNode;
-  requiresAuth?: boolean;
-};
+}
 
-type User = {
-  name: string;
-  email: string;
-  avatar?: string;
-} | null;
+const LOGGED_OUT_NAV_ITEMS: NavItem[] = [
+  { label: "Home", href: "/" },
+  { label: "Browse Books", href: "/books" },
+  { label: "About", href: "/about" },
+  { label: "Contact", href: "/contact" },
+];
 
-// ==================== ন্যাভবার কম্পোনেন্ট ====================
+const LOGGED_IN_NAV_ITEMS: NavItem[] = [
+  { label: "Home", href: "/" },
+  { label: "Browse Books", href: "/books" },
+  { label: "Share Book", href: "/share" },
+  { label: "Dashboard", href: "/dashboard" },
+];
+
 export default function Navbar() {
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // TODO: আপনার অথেনটিকেশন সিস্টেমের সাথে কানেক্ট করুন
-  const [user, setUser] = useState<User>(null); // TODO: রিয়েল ইউজার ডেটা দিয়ে রিপ্লেস করুন
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  
+  // Dynamic Auth State
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
 
-  // স্ক্রল ইফেক্ট (স্টিকি নেভবারের জন্য)
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
+      setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // বর্তমানে লগইন স্টেট (ডেমো ডেটা)
   useEffect(() => {
-    // এখানে আপনার অথেনটিকেশন চেক বসান (যেমন: localStorage থেকে টোকেন চেক)
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      setIsLoggedIn(true);
-      setUser({
-        name: "John Doe",
-        email: "john@example.com",
-        avatar: "https://ui-avatars.com/api/?name=John+Doe&background=C68A5C&color=fff&size=40",
-      });
-    } else {
-      setIsLoggedIn(false);
-      setUser(null);
-    }
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsDropdownOpen(false);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
-  // ========== নেভিগেশন আইটেম ==========
-  const navItems: NavItem[] = [
-    { label: "Home", href: "/", icon: <FaHome /> },
-    { label: "Browse Books", href: "/books", icon: <FaBook /> },
-    { label: "About", href: "/about", icon: <FaInfoCircle /> },
-    { label: "Contact", href: "/contact", icon: <FaEnvelope /> },
-  ];
-
-  const authItems: NavItem[] = [
-    { label: "Login", href: "/login", icon: <FaSignInAlt /> },
-    { label: "Register", href: "/register", icon: <FaUserPlus /> },
-  ];
-
-  const loggedInItems: NavItem[] = [
-    { label: "Dashboard", href: "/dashboard", icon: <FaChartBar /> },
-    { label: "Share Book", href: "/share", icon: <FaPlus /> },
-    { label: "Profile", href: "/profile", icon: <FaUser /> },
-  ];
-
-  // ========== ড্রপডাউন মেনু আইটেম ==========
-  const dropdownItems = [
-    { label: "Profile", href: "/profile", icon: <FaUser /> },
-    { label: "Dashboard", href: "/dashboard", icon: <FaChartBar /> },
-    { label: "Settings", href: "/settings", icon: <FaCog /> },
-    { label: "Logout", href: "#", icon: <FaSignOutAlt />, danger: true },
-  ];
-
-  // ========== লিংক অ্যাক্টিভ চেক ==========
-  const isActive = (href: string) => {
-    if (href === "/") return pathname === href;
-    return pathname.startsWith(href);
-  };
-
-  // ========== লগআউট হ্যান্ডেলার ==========
-  const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    setIsLoggedIn(false);
-    setUser(null);
-    setIsDropdownOpen(false);
-    window.location.href = "/";
-  };
-
-  // ========== মোবাইল মেনু টগল ==========
-  const toggleMenu = () => setIsOpen(!isOpen);
-
-  // ========== মোবাইল লিংক ক্লিক ==========
-  const handleMobileLinkClick = () => {
-    setIsOpen(false);
-  };
+  const currentNavItems = isLoggedIn ? LOGGED_IN_NAV_ITEMS : LOGGED_OUT_NAV_ITEMS;
 
   return (
-    <>
-      {/* =============================================== */}
-      {/* নেভবার (স্টিকি + গ্লাসমর্ফিজম) */}
-      {/* =============================================== */}
-      <nav
-        className={`fixed top-0 left-0 z-50 w-full transition-all duration-300 ${
-          scrolled
-            ? "bg-white/80 backdrop-blur-xl shadow-lg border-b border-white/20"
-            : "bg-white/30 backdrop-blur-md border-b border-white/10"
-        }`}
-      >
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            {/* ===== লোগো ===== */}
-            <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-[#3D2B1F] transition hover:scale-105">
-              <span className="text-3xl">📚</span>
-              <span className="font-['Playfair_Display']">BookNest</span>
-            </Link>
-
-            {/* ===== ডেস্কটপ মেনু ===== */}
-            <div className="hidden md:flex md:items-center md:gap-6">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-1.5 text-sm font-medium transition-all duration-200 hover:text-[#C68A5C] ${
-                    isActive(item.href)
-                      ? "text-[#C68A5C] font-semibold"
-                      : "text-[#3D2B1F]/70"
-                  }`}
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              ))}
-
-              {/* লগইন/লগআউট স্টেট */}
-              {isLoggedIn ? (
-                <div className="relative ml-2">
-                  {/* ইউজার অ্যাভাটার বাটন */}
-                  <button
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center gap-2 rounded-full border-2 border-[#C68A5C]/30 p-1 transition-all hover:border-[#C68A5C] hover:shadow-lg"
-                  >
-                    {user?.avatar ? (
-                      <Image
-                        src={user.avatar}
-                        alt="User Avatar"
-                        width={32}
-                        height={32}
-                        className="rounded-full"
-                      />
-                    ) : (
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#C68A5C] text-sm font-bold text-white">
-                        {user?.name?.charAt(0) || "U"}
-                      </div>
-                    )}
-                  </button>
-
-                  {/* ড্রপডাউন মেনু */}
-                  <AnimatePresence>
-                    {isDropdownOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute right-0 mt-2 w-56 origin-top-right rounded-xl border border-white/30 bg-white/90 p-1 shadow-2xl backdrop-blur-xl"
-                      >
-                        {/* ইউজার ইনফো */}
-                        <div className="border-b border-gray-100 px-3 py-2.5">
-                          <p className="font-semibold text-[#3D2B1F]">{user?.name}</p>
-                          <p className="text-xs text-[#3D2B1F]/60">{user?.email}</p>
-                        </div>
-
-                        {/* মেনু আইটেম */}
-                        {dropdownItems.map((item) => (
-                          <Link
-                            key={item.label}
-                            href={item.href}
-                            onClick={(e) => {
-                              if (item.label === "Logout") {
-                                e.preventDefault();
-                                handleLogout();
-                              } else {
-                                setIsDropdownOpen(false);
-                              }
-                            }}
-                            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                              item.danger
-                                ? "text-red-500 hover:bg-red-50"
-                                : "text-[#3D2B1F]/70 hover:bg-[#C68A5C]/10 hover:text-[#C68A5C]"
-                            }`}
-                          >
-                            {item.icon}
-                            {item.label}
-                          </Link>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <Link
-                    href="/login"
-                    className="flex items-center gap-1.5 rounded-full bg-[#C68A5C] px-5 py-2 text-sm font-semibold text-white transition-all hover:scale-105 hover:bg-[#b07a4e] hover:shadow-lg"
-                  >
-                    <FaSignInAlt />
-                    Login
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="flex items-center gap-1.5 rounded-full border-2 border-[#C68A5C] px-5 py-2 text-sm font-semibold text-[#C68A5C] transition-all hover:scale-105 hover:bg-[#C68A5C] hover:text-white hover:shadow-lg"
-                  >
-                    <FaUserPlus />
-                    Register
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* ===== মোবাইল মেনু বাটন ===== */}
-            <button
-              onClick={toggleMenu}
-              className="rounded-lg p-2 text-2xl text-[#3D2B1F] transition hover:bg-[#C68A5C]/10 md:hidden"
-              aria-label="Toggle Menu"
-            >
-              {isOpen ? <FaTimes /> : <FaBars />}
-            </button>
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled
+          ? "py-3 bg-gradient-to-r from-slate-900/90 via-[#0F172A]/90 to-blue-950/90 backdrop-blur-xl border-b border-blue-500/20 shadow-lg shadow-blue-950/20"
+          : "py-5 bg-gradient-to-r from-slate-950/70 via-slate-900/60 to-blue-950/70 backdrop-blur-md border-b border-white/10"
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        
+        {/* ===== Brand Logo ===== */}
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 group focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-2xl"
+        >
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-cyan-400 flex items-center justify-center text-white shadow-md shadow-blue-500/30 group-hover:scale-105 transition-transform duration-200">
+            <BookOpen className="w-5 h-5" />
           </div>
+          <span className="font-extrabold text-xl tracking-tight text-white">
+            Book<span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-indigo-300 bg-clip-text text-transparent">Nest</span>
+          </span>
+        </Link>
+
+        {/* ===== Desktop Links ===== */}
+        <nav className="hidden md:flex items-center gap-1" aria-label="Main Navigation">
+          {currentNavItems.map((item) => {
+            const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`relative px-4 py-2 text-sm font-medium rounded-2xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  isActive
+                    ? "text-blue-400 font-semibold"
+                    : "text-slate-300 hover:text-white"
+                }`}
+              >
+                {item.label}
+                {isActive && (
+                  <motion.div
+                    layoutId="navbar-active-underline"
+                    className="absolute bottom-0 left-3 right-3 h-[2.5px] bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-400 rounded-full"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* ===== Desktop Right Actions ===== */}
+        <div className="hidden md:flex items-center gap-2">
+          {isLoggedIn ? (
+            <>
+              <button
+                aria-label="Notifications"
+                className="p-2.5 rounded-2xl text-slate-300 hover:text-white hover:bg-white/10 transition-colors border border-transparent hover:border-white/10"
+              >
+                <Bell className="w-5 h-5" />
+              </button>
+
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsDropdownOpen((prev) => !prev)}
+                  aria-expanded={isDropdownOpen}
+                  className="flex items-center justify-center p-2.5 rounded-2xl bg-gradient-to-r from-blue-600/20 to-indigo-600/20 text-blue-300 hover:text-white border border-blue-500/30 hover:border-blue-400/60 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                >
+                  <User className="w-5 h-5" />
+                </button>
+
+                <AnimatePresence>
+                  {isDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                      transition={{ duration: 0.15, ease: "easeOut" }}
+                      className="absolute right-0 mt-3 w-52 rounded-2xl bg-slate-900/95 border border-slate-800 shadow-2xl backdrop-blur-2xl p-2 z-50 origin-top-right"
+                    >
+                      <div className="space-y-0.5">
+                        <Link
+                          href="/profile"
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-gradient-to-r hover:from-blue-600/20 hover:to-transparent rounded-xl transition-colors"
+                        >
+                          <User className="w-4 h-4 text-blue-400" /> Profile
+                        </Link>
+                        <Link
+                          href="/dashboard"
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-gradient-to-r hover:from-blue-600/20 hover:to-transparent rounded-xl transition-colors"
+                        >
+                          <LayoutDashboard className="w-4 h-4 text-blue-400" /> Dashboard
+                        </Link>
+                        <Link
+                          href="/my-books"
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-gradient-to-r hover:from-blue-600/20 hover:to-transparent rounded-xl transition-colors"
+                        >
+                          <Bookmark className="w-4 h-4 text-blue-400" /> My Shared Books
+                        </Link>
+                      </div>
+
+                      <div className="h-[1px] bg-slate-800 my-1" />
+
+                      <button
+                        onClick={() => {
+                          setIsDropdownOpen(false);
+                          setIsLoggedIn(false);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
+                      >
+                        <LogOut className="w-4 h-4 text-red-400" /> Logout
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              className="px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 rounded-2xl shadow-lg shadow-blue-500/25 active:scale-95 transition-all"
+            >
+              Login
+            </Link>
+          )}
         </div>
 
-        {/* ===== মোবাইল মেনু (অ্যানিমেটেড) ===== */}
-        <AnimatePresence>
-          {isOpen && (
+        {/* ===== Mobile Menu Toggle ===== */}
+        <div className="flex items-center gap-2 md:hidden">
+          <button
+            onClick={() => setIsMobileOpen(true)}
+            aria-label="Open Navigation Menu"
+            className="p-2.5 rounded-2xl text-slate-200 hover:bg-white/10 transition-colors border border-white/5"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+
+      {/* ===== Mobile Drawer Menu ===== */}
+      <AnimatePresence>
+        {isMobileOpen && (
+          <>
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="overflow-hidden border-t border-white/20 bg-white/90 backdrop-blur-xl md:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileOpen(false)}
+              className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-50 md:hidden"
+            />
+
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 bottom-0 w-full max-w-xs sm:max-w-sm bg-gradient-to-b from-slate-900 via-slate-950 to-blue-950 border-l border-slate-800 shadow-2xl z-50 flex flex-col md:hidden p-6"
             >
-              <div className="space-y-1 px-4 pb-5 pt-3">
-                {/* নেভিগেশন লিংক */}
-                {navItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={handleMobileLinkClick}
-                    className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition ${
-                      isActive(item.href)
-                        ? "bg-[#C68A5C]/10 text-[#C68A5C]"
-                        : "text-[#3D2B1F]/70 hover:bg-[#C68A5C]/5"
-                    }`}
-                  >
-                    {item.icon}
-                    {item.label}
-                  </Link>
-                ))}
+              {/* Drawer Header */}
+              <div className="flex items-center justify-between pb-6 border-b border-slate-800">
+                <span className="font-bold text-lg bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Menu</span>
+                <button
+                  onClick={() => setIsMobileOpen(false)}
+                  aria-label="Close menu"
+                  className="p-2 rounded-2xl hover:bg-white/10 text-slate-300 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
-                <div className="my-2 border-t border-gray-200"></div>
+              {/* Drawer Main Content (Increased height & item padding) */}
+              <div className="flex-1 py-10 space-y-8 overflow-y-auto">
+                {/* Primary Nav Links */}
+                <div className="space-y-3">
+                  {/* <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Navigation</p> */}
+                  <div className="space-y-2">
+                    {currentNavItems.map((item) => {
+                      const isActive = pathname === item.href;
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setIsMobileOpen(false)}
+                          className={`block px-4 py-4 rounded-2xl text-base font-medium transition-colors ${
+                            isActive
+                              ? "bg-gradient-to-r from-blue-600/20 to-indigo-600/10 text-blue-400 font-semibold border border-blue-500/20"
+                              : "text-slate-300 hover:bg-white/5"
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
 
-                {/* লগইন/লগআউট (মোবাইল) */}
-                {isLoggedIn ? (
-                  <>
-                    {loggedInItems.map((item) => (
+                {/* Logged In Quick Actions */}
+                {isLoggedIn && (
+                  <div className="space-y-3">
+                    <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Account</p>
+                    <div className="space-y-2">
                       <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={handleMobileLinkClick}
-                        className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-[#3D2B1F]/70 transition hover:bg-[#C68A5C]/5"
+                        href="/profile"
+                        onClick={() => setIsMobileOpen(false)}
+                        className="flex items-center gap-3.5 px-4 py-4 rounded-2xl text-base font-medium text-slate-300 hover:bg-white/5"
                       >
-                        {item.icon}
-                        {item.label}
+                        <User className="w-5 h-5 text-blue-400" /> Profile
                       </Link>
-                    ))}
-                    <button
-                      onClick={() => {
-                        handleLogout();
-                        handleMobileLinkClick();
-                      }}
-                      className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-red-500 transition hover:bg-red-50"
-                    >
-                      <FaSignOutAlt />
-                      Logout
-                    </button>
-                  </>
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setIsMobileOpen(false)}
+                        className="flex items-center gap-3.5 px-4 py-4 rounded-2xl text-base font-medium text-slate-300 hover:bg-white/5"
+                      >
+                        <LayoutDashboard className="w-5 h-5 text-blue-400" /> Dashboard
+                      </Link>
+                      <Link
+                        href="/my-books"
+                        onClick={() => setIsMobileOpen(false)}
+                        className="flex items-center gap-3.5 px-4 py-4 rounded-2xl text-base font-medium text-slate-300 hover:bg-white/5"
+                      >
+                        <Bookmark className="w-5 h-5 text-blue-400" /> My Shared Books
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Drawer Footer */}
+              <div className="pt-6 border-t border-slate-800">
+                {isLoggedIn ? (
+                  <button
+                    onClick={() => {
+                      setIsLoggedIn(false);
+                      setIsMobileOpen(false);
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-sm font-semibold text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" /> Logout
+                  </button>
                 ) : (
-                  <>
-                    <Link
-                      href="/login"
-                      onClick={handleMobileLinkClick}
-                      className="flex items-center gap-3 rounded-lg bg-[#C68A5C] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#b07a4e]"
-                    >
-                      <FaSignInAlt />
-                      Login
-                    </Link>
-                    <Link
-                      href="/register"
-                      onClick={handleMobileLinkClick}
-                      className="flex items-center gap-3 rounded-lg border-2 border-[#C68A5C] px-4 py-3 text-sm font-semibold text-[#C68A5C] transition hover:bg-[#C68A5C] hover:text-white"
-                    >
-                      <FaUserPlus />
-                      Register
-                    </Link>
-                  </>
+                  <Link
+                    href="/login"
+                    onClick={() => setIsMobileOpen(false)}
+                    className="w-full flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/20 transition-all"
+                  >
+                    <LogIn className="w-4 h-4" /> Login
+                  </Link>
                 )}
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
-
-      {/* নেভবারের নিচে স্পেস (কন্টেন্ট যেন নেভবারের আড়ালে না যায়) */}
-      <div className="h-16"></div>
-    </>
+          </>
+        )}
+      </AnimatePresence>
+    </header>
   );
 }
