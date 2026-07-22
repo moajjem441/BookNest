@@ -1,3 +1,4 @@
+import Categories from "./Components/Categories";
 import FeaturedBooks from "./Components/FeaturedBooks";
 import Hero from "./Components/Hero";
 
@@ -9,6 +10,8 @@ export default function Home() {
    <Hero/>
 
    <FeaturedBooks></FeaturedBooks>
+
+   <Categories></Categories>
    
    </div>
   );
