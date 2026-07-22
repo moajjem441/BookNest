@@ -2,6 +2,7 @@ import Categories from "./Components/Categories";
 import FeaturedBooks from "./Components/FeaturedBooks";
 import Hero from "./Components/Hero";
 import HowItWorks from "./Components/HowItWorks";
+import Statistics from "./Components/Statistics";
 
 
 export default function Home() {
@@ -15,6 +16,8 @@ export default function Home() {
    <Categories></Categories>
 
    <HowItWorks></HowItWorks>
+
+   <Statistics></Statistics>
    
    </div>
   );
