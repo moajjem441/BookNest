@@ -1,4 +1,5 @@
 import Categories from "./Components/Categories";
+import CTA from "./Components/CTA";
 import FAQ from "./Components/FAQ";
 import FeaturedBooks from "./Components/FeaturedBooks";
 import Hero from "./Components/Hero";
@@ -24,6 +25,8 @@ export default function Home() {
    <Testimonials></Testimonials>
 
    <FAQ></FAQ>
+
+   <CTA></CTA>
    
    </div>
   );
