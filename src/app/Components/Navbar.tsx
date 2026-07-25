@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   BookOpen, 
@@ -13,8 +14,12 @@ import {
   LayoutDashboard, 
   Bookmark, 
   LogOut, 
-  LogIn
+  LogIn,
+  UserPlus
 } from "lucide-react";
+
+// Better Auth Client Import
+import { authClient, useSession } from "@/lib/auth-client";
 
 interface NavItem {
   label: string;
@@ -25,7 +30,7 @@ const LOGGED_OUT_NAV_ITEMS: NavItem[] = [
   { label: "Home", href: "/" },
   { label: "Browse Books", href: "/books" },
   { label: "About", href: "/about" },
-  { label: "Contact", href: "/contact" },
+  { label: "Contact Us", href: "/contact" },
 ];
 
 const LOGGED_IN_NAV_ITEMS: NavItem[] = [
@@ -37,14 +42,34 @@ const LOGGED_IN_NAV_ITEMS: NavItem[] = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Better Auth Session
+  const { data: session, isPending } = useSession();
+  
+  const isAuthenticated = !!session;
+  const isLoading = isPending;
+
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  
-  // Dynamic Auth State
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Sign out method using Better Auth
+  const handleSignOut = async () => {
+    setIsDropdownOpen(false);
+    setIsMobileOpen(false);
+
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/login"); // ← পরিবর্তন ১
+          router.refresh();
+        },
+      },
+    });
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -72,7 +97,7 @@ export default function Navbar() {
     };
   }, []);
 
-  const currentNavItems = isLoggedIn ? LOGGED_IN_NAV_ITEMS : LOGGED_OUT_NAV_ITEMS;
+  const currentNavItems = isAuthenticated ? LOGGED_IN_NAV_ITEMS : LOGGED_OUT_NAV_ITEMS;
 
   return (
     <header
@@ -84,7 +109,7 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         
-        {/* ===== Brand Logo ===== */}
+        {/* Brand Logo */}
         <Link
           href="/"
           className="flex items-center gap-2.5 group focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-2xl"
@@ -97,7 +122,7 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* ===== Desktop Links ===== */}
+        {/* Navigation Links */}
         <nav className="hidden md:flex items-center gap-1" aria-label="Main Navigation">
           {currentNavItems.map((item) => {
             const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
@@ -125,9 +150,14 @@ export default function Navbar() {
           })}
         </nav>
 
-        {/* ===== Desktop Right Actions ===== */}
-        <div className="hidden md:flex items-center gap-2">
-          {isLoggedIn ? (
+        {/* Auth Controls */}
+        <div className="hidden md:flex items-center gap-3">
+          {isLoading ? (
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-2xl bg-slate-800 animate-pulse" />
+              <div className="w-24 h-9 rounded-2xl bg-slate-800 animate-pulse" />
+            </div>
+          ) : isAuthenticated ? (
             <>
               <button
                 aria-label="Notifications"
@@ -136,13 +166,29 @@ export default function Navbar() {
                 <Bell className="w-5 h-5" />
               </button>
 
+              {/* Profile Dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen((prev) => !prev)}
                   aria-expanded={isDropdownOpen}
-                  className="flex items-center justify-center p-2.5 rounded-2xl bg-gradient-to-r from-blue-600/20 to-indigo-600/20 text-blue-300 hover:text-white border border-blue-500/30 hover:border-blue-400/60 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                  className="flex items-center gap-2.5 px-3 py-1.5 rounded-2xl bg-gradient-to-r from-blue-600/20 to-indigo-600/20 text-blue-300 hover:text-white border border-blue-500/30 hover:border-blue-400/60 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
                 >
-                  <User className="w-5 h-5" />
+                  {session?.user?.image ? (
+                    <Image
+                      src={session.user.image}
+                      alt={session.user.name || "User Avatar"}
+                      width={88}
+                      height={88}
+                      className="rounded-xl object-cover ring-1 ring-blue-400/40"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-xl bg-blue-600/40 flex items-center justify-center text-blue-200">
+                      <User className="w-4 h-4" />
+                    </div>
+                  )}
+                  <span className="text-sm font-medium text-slate-200 max-w-[100px] truncate">
+                    {session?.user?.name || "Account"}
+                  </span>
                 </button>
 
                 <AnimatePresence>
@@ -152,15 +198,24 @@ export default function Navbar() {
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95, y: -10 }}
                       transition={{ duration: 0.15, ease: "easeOut" }}
-                      className="absolute right-0 mt-3 w-52 rounded-2xl bg-slate-900/95 border border-slate-800 shadow-2xl backdrop-blur-2xl p-2 z-50 origin-top-right"
+                      className="absolute right-0 mt-3 w-56 rounded-2xl bg-slate-900/95 border border-slate-800 shadow-2xl backdrop-blur-2xl p-2 z-50 origin-top-right"
                     >
+                      <div className="px-3 py-2 border-b border-slate-800 mb-1">
+                        <p className="text-sm font-semibold text-white truncate">
+                          {session?.user?.name || "User"}
+                        </p>
+                        <p className="text-xs text-slate-400 truncate">
+                          {session?.user?.email || ""}
+                        </p>
+                      </div>
+
                       <div className="space-y-0.5">
                         <Link
                           href="/profile"
                           onClick={() => setIsDropdownOpen(false)}
                           className="flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-gradient-to-r hover:from-blue-600/20 hover:to-transparent rounded-xl transition-colors"
                         >
-                          <User className="w-4 h-4 text-blue-400" /> Profile
+                          <User className="w-4 h-4 text-blue-400" /> My Profile
                         </Link>
                         <Link
                           href="/dashboard"
@@ -180,31 +235,39 @@ export default function Navbar() {
 
                       <div className="h-[1px] bg-slate-800 my-1" />
 
-                      <button
-                        onClick={() => {
-                          setIsDropdownOpen(false);
-                          setIsLoggedIn(false);
-                        }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
-                      >
-                        <LogOut className="w-4 h-4 text-red-400" /> Logout
-                      </button>
+                     
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
+
+              <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
+                      >
+                        <LogOut className="w-4 h-4 text-red-400" /> Logout
+                      </button>
             </>
           ) : (
-            <Link
-              href="/login"
-              className="px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 rounded-2xl shadow-lg shadow-blue-500/25 active:scale-95 transition-all"
-            >
-              Login
-            </Link>
+            <>
+              <Link
+                href="/login"
+                className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 rounded-2xl transition-all"
+              >
+                Login
+              </Link>
+              <Link
+                href="/register"
+                className="px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 rounded-2xl shadow-lg shadow-blue-500/25 active:scale-95 transition-all flex items-center gap-2"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>Register</span>
+              </Link>
+            </>
           )}
         </div>
 
-        {/* ===== Mobile Menu Toggle ===== */}
+        {/* Mobile Menu Toggle */}
         <div className="flex items-center gap-2 md:hidden">
           <button
             onClick={() => setIsMobileOpen(true)}
@@ -216,7 +279,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* ===== Mobile Drawer Menu ===== */}
+      {/* Mobile Drawer Menu */}
       <AnimatePresence>
         {isMobileOpen && (
           <>
@@ -225,7 +288,7 @@ export default function Navbar() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsMobileOpen(false)}
-              className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-50 md:hidden"
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-lg z-50 md:hidden" // ← পরিবর্তন ২
             />
 
             <motion.div
@@ -235,9 +298,10 @@ export default function Navbar() {
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
               className="fixed top-0 right-0 bottom-0 w-full max-w-xs sm:max-w-sm bg-gradient-to-b from-slate-900 via-slate-950 to-blue-950 border-l border-slate-800 shadow-2xl z-50 flex flex-col md:hidden p-6"
             >
-              {/* Drawer Header */}
               <div className="flex items-center justify-between pb-6 border-b border-slate-800">
-                <span className="font-bold text-lg bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Menu</span>
+                <span className="font-bold text-lg bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+                  Menu
+                </span>
                 <button
                   onClick={() => setIsMobileOpen(false)}
                   aria-label="Close menu"
@@ -247,83 +311,80 @@ export default function Navbar() {
                 </button>
               </div>
 
-              {/* Drawer Main Content (Increased height & item padding) */}
-              <div className="flex-1 py-10 space-y-8 overflow-y-auto">
-                {/* Primary Nav Links */}
-                <div className="space-y-3">
-                  {/* <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Navigation</p> */}
-                  <div className="space-y-2">
-                    {currentNavItems.map((item) => {
-                      const isActive = pathname === item.href;
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          onClick={() => setIsMobileOpen(false)}
-                          className={`block px-4 py-4 rounded-2xl text-base font-medium transition-colors ${
-                            isActive
-                              ? "bg-gradient-to-r from-blue-600/20 to-indigo-600/10 text-blue-400 font-semibold border border-blue-500/20"
-                              : "text-slate-300 hover:bg-white/5"
-                          }`}
-                        >
-                          {item.label}
-                        </Link>
-                      );
-                    })}
-                  </div>
+              <div className="flex-1 py-8 space-y-6 overflow-y-auto">
+                <div className="space-y-2">
+                  {currentNavItems.map((item) => {
+                    const isActive = pathname === item.href;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setIsMobileOpen(false)}
+                        className={`block px-4 py-3.5 rounded-2xl text-base font-medium transition-colors ${
+                          isActive
+                            ? "bg-gradient-to-r from-blue-600/20 to-indigo-600/10 text-blue-400 font-semibold border border-blue-500/20"
+                            : "text-slate-300 hover:bg-white/5"
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    );
+                  })}
                 </div>
 
-                {/* Logged In Quick Actions */}
-                {isLoggedIn && (
-                  <div className="space-y-3">
+                {isAuthenticated && (
+                  <div className="space-y-2 pt-4 border-t border-slate-800/80">
                     <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Account</p>
-                    <div className="space-y-2">
-                      <Link
-                        href="/profile"
-                        onClick={() => setIsMobileOpen(false)}
-                        className="flex items-center gap-3.5 px-4 py-4 rounded-2xl text-base font-medium text-slate-300 hover:bg-white/5"
-                      >
-                        <User className="w-5 h-5 text-blue-400" /> Profile
-                      </Link>
-                      <Link
-                        href="/dashboard"
-                        onClick={() => setIsMobileOpen(false)}
-                        className="flex items-center gap-3.5 px-4 py-4 rounded-2xl text-base font-medium text-slate-300 hover:bg-white/5"
-                      >
-                        <LayoutDashboard className="w-5 h-5 text-blue-400" /> Dashboard
-                      </Link>
-                      <Link
-                        href="/my-books"
-                        onClick={() => setIsMobileOpen(false)}
-                        className="flex items-center gap-3.5 px-4 py-4 rounded-2xl text-base font-medium text-slate-300 hover:bg-white/5"
-                      >
-                        <Bookmark className="w-5 h-5 text-blue-400" /> My Shared Books
-                      </Link>
-                    </div>
+                    <Link
+                      href="/profile"
+                      onClick={() => setIsMobileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-2xl text-base font-medium text-slate-300 hover:bg-white/5"
+                    >
+                      <User className="w-5 h-5 text-blue-400" /> Profile
+                    </Link>
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setIsMobileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-2xl text-base font-medium text-slate-300 hover:bg-white/5"
+                    >
+                      <LayoutDashboard className="w-5 h-5 text-blue-400" /> Dashboard
+                    </Link>
+                    <Link
+                      href="/my-books"
+                      onClick={() => setIsMobileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-2xl text-base font-medium text-slate-300 hover:bg-white/5"
+                    >
+                      <Bookmark className="w-5 h-5 text-blue-400" /> My Shared Books
+                    </Link>
                   </div>
                 )}
               </div>
 
-              {/* Drawer Footer */}
               <div className="pt-6 border-t border-slate-800">
-                {isLoggedIn ? (
+                {isAuthenticated ? (
                   <button
-                    onClick={() => {
-                      setIsLoggedIn(false);
-                      setIsMobileOpen(false);
-                    }}
-                    className="w-full flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-sm font-semibold text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-colors"
+                    onClick={handleSignOut}
+                    className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl text-sm font-semibold text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-colors"
                   >
                     <LogOut className="w-4 h-4" /> Logout
                   </button>
                 ) : (
-                  <Link
-                    href="/login"
-                    onClick={() => setIsMobileOpen(false)}
-                    className="w-full flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/20 transition-all"
-                  >
-                    <LogIn className="w-4 h-4" /> Login
-                  </Link>
+                  <div className="flex flex-col gap-2.5">
+                    <Link
+                      href="/login"
+                      onClick={() => setIsMobileOpen(false)}
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl text-sm font-semibold text-slate-200 hover:bg-white/5 border border-slate-800 transition-all"
+                    >
+                      <LogIn className="w-4 h-4" /> Login
+                    </Link>
+                    <Link
+                      href="/register"
+                      onClick={() => setIsMobileOpen(false)}
+                      className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/20 transition-all"
+                    >
+                      <UserPlus className="w-4 h-4" /> Register
+                    </Link>
+                  </div>
                 )}
               </div>
             </motion.div>

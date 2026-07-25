@@ -37,7 +37,7 @@ export default function LoginPage() {
         {
           email: formData.email,
           password: formData.password,
-          callbackURL: "/dashboard",
+          callbackURL: "/",
         },
         {
           onRequest: () => {
@@ -45,7 +45,7 @@ export default function LoginPage() {
           },
           onSuccess: () => {
             setIsLoading(false);
-            router.push("/dashboard");
+            router.push("/");
           },
           onError: (ctx) => {
             setIsLoading(false);
@@ -193,7 +193,7 @@ export default function LoginPage() {
               Or sign in with
             </span>
           </div>
-          
+
 
           {/* Google Sign-In Button */}
           {/* onClick={handleGoogleSignIn} */}
