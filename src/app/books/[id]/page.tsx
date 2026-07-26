@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { useSession } from "@/lib/auth-client"; // Better Auth Client Hook
 import { motion } from "framer-motion";
 import { 
   ArrowLeft, 
@@ -22,7 +23,7 @@ import {
   ShieldCheck
 } from "lucide-react";
 
-// Updated interfaces to include Owner details
+// Interfaces
 export interface OwnerDetail {
   _id?: string;
   name: string;
@@ -50,6 +51,10 @@ export default function BookDetailPage() {
   const params = useParams();
   const router = useRouter();
   const bookId = params?.id as string;
+
+  // Better Auth Session Hook
+  const { data: session } = useSession();
+  const user = session?.user;
 
   const [book, setBook] = useState<BookDetail | null>(null);
   const [owner, setOwner] = useState<OwnerDetail | null>(null);
@@ -104,14 +109,38 @@ export default function BookDetailPage() {
   }, [bookId]);
 
   const handleBorrowRequest = async () => {
+    if (!user) {
+      alert("Please log in to request a book.");
+      router.push("/login");
+      return;
+    }
+
     setIsRequesting(true);
+
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/books/${bookId}/request`, {
-        method: "POST",
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/books/${bookId}/request`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: user.name,
+            email: user.email,
+            ownerId: book?.ownerId,
+            ownerEmail: owner?.email,
+          }),
+        }
+      );
+
+      const data = await res.json();
 
       if (res.ok) {
         setRequestSuccess(true);
+        console.log(data.message);
+      } else {
+        console.log(data.message);
       }
     } catch (err) {
       console.error(err);
@@ -230,7 +259,7 @@ export default function BookDetailPage() {
               <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800/80 space-y-2">
                 <div className="flex items-center gap-1.5 text-xs font-medium text-slate-400 uppercase tracking-wider">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  Book Owner Profile
+                  Book Shared By
                 </div>
 
                 {isOwnerLoading ? (
@@ -371,7 +400,7 @@ export default function BookDetailPage() {
   );
 }
 
-// Skeleton Loader with Owner Skeleton
+// Skeleton Loader
 function BookDetailSkeleton() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 pt-28 pb-16 px-4 sm:px-6 lg:px-8">
