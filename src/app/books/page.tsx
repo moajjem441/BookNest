@@ -81,20 +81,37 @@ export default function BrowseBooksPage() {
     fetchBooks();
   }, []);
 
-  // Filter and Sort Logic
+
+
+ // Filter and Sort Logic
   const filteredAndSortedBooks = useMemo(() => {
     return books
       .filter((book) => {
         // Search by Title or Author
-        const query = searchQuery.toLowerCase();
+        const query = searchQuery.trim().toLowerCase();
         const matchesSearch =
-          book.title.toLowerCase().includes(query) ||
-          book.author.toLowerCase().includes(query);
+          !query ||
+          book.title?.toLowerCase().includes(query) ||
+          book.author?.toLowerCase().includes(query);
 
-        // Filter by Category
-        const matchesCategory =
-          selectedCategory === "All Categories" ||
-          book.category.toLowerCase() === selectedCategory.toLowerCase();
+        // Filter by Category Logic
+        const selectedCat = selectedCategory.trim().toLowerCase();
+        const bookCat = (book.category || "").trim().toLowerCase();
+
+        let matchesCategory = false;
+
+        if (selectedCategory === "All Categories") {
+          matchesCategory = true;
+        } else if (selectedCat === "fiction") {
+          // 'Fiction' সিলেক্ট করলে Non-fiction বাদ যাবে, কিন্তু Science-fiction সহ অন্যান্য Fiction দেখাবে
+          matchesCategory = !bookCat.includes("non-fiction") && bookCat.includes("fiction");
+        } else if (selectedCat === "non-fiction") {
+          // 'Non-Fiction' সিলেক্ট করলে নিশ্চিত করবে যেন ক্যাটাগরিতে non-fiction থাকে
+          matchesCategory = bookCat.includes("non-fiction");
+        } else {
+          // অন্যান্য ক্যাটাগরির জন্য (যেমন: Science, History) আংশিক বা হুবহু ম্যাচ চেক করবে
+          matchesCategory = bookCat.includes(selectedCat) || bookCat === selectedCat;
+        }
 
         // Filter by Format/Type (Physical / PDF)
         const matchesType =
@@ -117,6 +134,8 @@ export default function BrowseBooksPage() {
         return 0;
       });
   }, [books, searchQuery, selectedCategory, selectedType, sortBy]);
+
+
 
   // Reset pagination when filters change
   useEffect(() => {
