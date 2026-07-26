@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { toast } from "sonner"; // ✅ Sonner Toast Import
 import { 
   BookOpen, 
   Mail, 
@@ -13,7 +14,6 @@ import {
   ArrowRight, 
   Eye, 
   EyeOff, 
- 
   Image as ImageIcon,
   Loader2
 } from "lucide-react";
@@ -51,38 +51,47 @@ export default function RegisterPage() {
         {
           onRequest: () => {
             setIsLoading(true);
+            toast.loading("Creating your account...", { id: "register-toast" }); // ✅ Loading Toast
           },
           onSuccess: () => {
             setIsLoading(false);
+            toast.success("Account created successfully! Redirecting...", { id: "register-toast" }); // ✅ Success Toast
             router.push("/");
           },
           onError: (ctx) => {
             setIsLoading(false);
-            setErrorMessage(ctx.error.message || "Failed to create account.");
+            const msg = ctx.error.message || "Failed to create account.";
+            setErrorMessage(msg);
+            toast.error(msg, { id: "register-toast" }); // ✅ Error Toast
           },
         }
       );
 
       if (error) {
-        setErrorMessage(error.message || "Registration failed. Please try again.");
+        const msg = error.message || "Registration failed. Please try again.";
+        setErrorMessage(msg);
+        toast.error(msg, { id: "register-toast" });
       }
     } catch (err: any) {
-      setErrorMessage(err?.message || "An unexpected error occurred.");
+      const msg = err?.message || "An unexpected error occurred.";
+      setErrorMessage(msg);
+      toast.error(msg, { id: "register-toast" });
     } finally {
       setIsLoading(false);
     }
   };
 
-//   const handleGoogleSignIn = async () => {
-//     try {
-//       await authClient.signIn.social({
-//         provider: "google",
-//         callbackURL: "/",
-//       });
-//     } catch (err: any) {
-//       setErrorMessage(err?.message || "Google sign-in failed.");
-//     }
-//   };
+  const handleGoogleSignIn = async () => {
+    try {
+      toast.loading("Connecting to Google...", { id: "social-toast" });
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
+    } catch (err: any) {
+      toast.error(err?.message || "Google sign-in failed.", { id: "social-toast" });
+    }
+  };
 
   return (
     <div className="min-h-dvh w-full bg-slate-950 flex items-center justify-center relative overflow-hidden px-4 py-24 selection:bg-blue-500 selection:text-white">
@@ -91,7 +100,6 @@ export default function RegisterPage() {
       <div className="absolute top-1/4 left-1/4 w-[320px] sm:w-[450px] h-[320px] sm:h-[450px] bg-blue-600/15 rounded-full blur-[100px] sm:blur-[140px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-[320px] sm:w-[450px] h-[320px] sm:h-[450px] bg-indigo-600/15 rounded-full blur-[100px] sm:blur-[140px] pointer-events-none" />
 
-      {/* max-w-xl দিয়ে উইডথ বাড়ানো হয়েছে (576px) */}
       <div className="max-w-xl w-full relative z-10 my-auto">
         
         {/* Brand Logo & Header */}
@@ -223,8 +231,6 @@ export default function RegisterPage() {
               </div>
             </div>
 
-           
-
             {/* Submit Button */}
             <button
               type="submit"
@@ -257,10 +263,9 @@ export default function RegisterPage() {
           </div>
 
           {/* Google Sign-In Button */}
-           {/* onClick={handleGoogleSignIn} */}
           <button
             type="button"
-           
+            onClick={handleGoogleSignIn}
             className="w-full py-3 px-4 rounded-2xl bg-slate-950 border border-slate-800 hover:bg-slate-800/80 text-slate-200 font-semibold text-sm transition-all flex items-center justify-center gap-3 shadow-sm cursor-pointer"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
