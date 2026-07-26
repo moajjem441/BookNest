@@ -14,7 +14,8 @@ import {
   ChevronLeft, 
   ChevronRight, 
   RotateCcw,
-  BookMarked
+  BookMarked,
+  X
 } from "lucide-react";
 
 // --- Types ---
@@ -38,6 +39,7 @@ const CATEGORIES = [
   "History",
   "Self-Help",
   "Biography",
+  "Others"
 ];
 
 const ITEMS_PER_PAGE = 8;
@@ -50,12 +52,21 @@ export default function BrowseBooksPage() {
 
   // Filter & Search States
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedType, setSelectedType] = useState<"All" | "Physical" | "PDF">("All");
   const [sortBy, setSortBy] = useState<"latest" | "a-z" | "z-a">("latest");
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Search Debounce Effect (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Fetch Books from API
   useEffect(() => {
@@ -64,10 +75,9 @@ export default function BrowseBooksPage() {
         setIsLoading(true);
         setError(null);
         
-        // Replace with your actual API endpoint URL
         const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/books`); 
         
-        if (!res.ok) throw new Error("Failed to load books");
+        if (!res.ok) throw new Error("Failed to load books from server.");
         
         const data = await res.json();
         setBooks(data.books || data);
@@ -81,14 +91,12 @@ export default function BrowseBooksPage() {
     fetchBooks();
   }, []);
 
-
-
- // Filter and Sort Logic
+  // Filter and Sort Logic
   const filteredAndSortedBooks = useMemo(() => {
     return books
       .filter((book) => {
         // Search by Title or Author
-        const query = searchQuery.trim().toLowerCase();
+        const query = debouncedSearch.trim().toLowerCase();
         const matchesSearch =
           !query ||
           book.title?.toLowerCase().includes(query) ||
@@ -98,22 +106,32 @@ export default function BrowseBooksPage() {
         const selectedCat = selectedCategory.trim().toLowerCase();
         const bookCat = (book.category || "").trim().toLowerCase();
 
+        const standardCategories = [
+          "fiction",
+          "non-fiction",
+          "technology",
+          "science",
+          "history",
+          "self-help",
+          "biography",
+        ];
+
         let matchesCategory = false;
 
         if (selectedCategory === "All Categories") {
           matchesCategory = true;
         } else if (selectedCat === "fiction") {
-          // 'Fiction' সিলেক্ট করলে Non-fiction বাদ যাবে, কিন্তু Science-fiction সহ অন্যান্য Fiction দেখাবে
           matchesCategory = !bookCat.includes("non-fiction") && bookCat.includes("fiction");
         } else if (selectedCat === "non-fiction") {
-          // 'Non-Fiction' সিলেক্ট করলে নিশ্চিত করবে যেন ক্যাটাগরিতে non-fiction থাকে
           matchesCategory = bookCat.includes("non-fiction");
+        } else if (selectedCat === "others") {
+          // 'Others' ফিল্টারে চাপ দিলে যেসব ক্যাটাগরি মেনু লিস্টে নেই সেগুলো খুঁজে বের করবে
+          matchesCategory = !standardCategories.some((sc) => bookCat.includes(sc));
         } else {
-          // অন্যান্য ক্যাটাগরির জন্য (যেমন: Science, History) আংশিক বা হুবহু ম্যাচ চেক করবে
           matchesCategory = bookCat.includes(selectedCat) || bookCat === selectedCat;
         }
 
-        // Filter by Format/Type (Physical / PDF)
+        // Filter by Format/Type
         const matchesType =
           selectedType === "All" ||
           book.type === selectedType ||
@@ -133,14 +151,12 @@ export default function BrowseBooksPage() {
         }
         return 0;
       });
-  }, [books, searchQuery, selectedCategory, selectedType, sortBy]);
-
-
+  }, [books, debouncedSearch, selectedCategory, selectedType, sortBy]);
 
   // Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCategory, selectedType, sortBy]);
+  }, [debouncedSearch, selectedCategory, selectedType, sortBy]);
 
   // Pagination Math
   const totalPages = Math.ceil(filteredAndSortedBooks.length / ITEMS_PER_PAGE);
@@ -151,6 +167,7 @@ export default function BrowseBooksPage() {
 
   const handleResetFilters = () => {
     setSearchQuery("");
+    setDebouncedSearch("");
     setSelectedCategory("All Categories");
     setSelectedType("All");
     setSortBy("latest");
@@ -158,7 +175,7 @@ export default function BrowseBooksPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 pt-28 pb-16 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-950 text-slate-100 pt-28 pb-16 px-4 sm:px-6 lg:px-8 selection:bg-blue-500 selection:text-white">
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* ===== Header Section ===== */}
@@ -167,44 +184,46 @@ export default function BrowseBooksPage() {
             Explore Our <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-indigo-300 bg-clip-text text-transparent">Library</span>
           </h1>
           <p className="text-slate-400 text-sm sm:text-base">
-            Discover community-shared physical books and PDF resources. Filter and find your next great read.
+            Discover community-shared physical books and digital PDF resources. Filter and find your next great read.
           </p>
         </div>
 
         {/* ===== Controls & Filters Bar ===== */}
-        <div className="p-4 sm:p-6 rounded-3xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-xl shadow-xl space-y-4">
+        <div className="p-4 sm:p-6 rounded-3xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-xl shadow-2xl space-y-4">
           
-          {/* Top Row: Search Input & Sort Selector */}
+          {/* Top Row: Search Input & Sort Controls */}
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            
             {/* Search Input */}
             <div className="relative w-full md:w-1/2">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search by book title or author..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 rounded-2xl bg-slate-950/60 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                className="w-full pl-11 pr-10 py-3 rounded-2xl bg-slate-950/60 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-white bg-slate-800 px-2 py-1 rounded-lg"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
                 >
-                  Clear
+                  <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
 
             {/* Sort & Format Controls */}
             <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full md:w-auto">
+              
               {/* Format Filter (Physical/PDF) */}
               <div className="flex items-center bg-slate-950/60 p-1 rounded-2xl border border-slate-800 w-full sm:w-auto">
                 {(["All", "Physical", "PDF"] as const).map((type) => (
                   <button
                     key={type}
                     onClick={() => setSelectedType(type)}
-                    className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                    className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       selectedType === type
                         ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20"
                         : "text-slate-400 hover:text-slate-200"
@@ -215,32 +234,33 @@ export default function BrowseBooksPage() {
                 ))}
               </div>
 
-              {/* Sort By Dropdown */}
+              {/* Sort Dropdown */}
               <div className="relative flex-1 sm:flex-none">
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  className="w-full sm:w-auto appearance-none pl-10 pr-8 py-2.5 rounded-2xl bg-slate-950/60 border border-slate-800 text-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  className="w-full sm:w-auto appearance-none pl-10 pr-8 py-2.5 rounded-2xl bg-slate-950/60 border border-slate-800 text-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer"
                 >
                   <option value="latest">Sort by: Latest</option>
-                  <option value="a-z">Sort by: A - Z</option>
-                  <option value="z-a">Sort by: Z - A</option>
+                  <option value="a-z">Sort by: Title (A - Z)</option>
+                  <option value="z-a">Sort by: Title (Z - A)</option>
                 </select>
                 <ArrowUpDown className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
               </div>
+
             </div>
           </div>
 
           {/* Bottom Row: Category Chips */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-2 scrollbar-none">
-            <Filter className="w-4 h-4 text-slate-400 shrink-0 mr-1" />
+            <Filter className="w-4 h-4 text-slate-500 shrink-0 mr-1" />
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
                   selectedCategory === cat
-                    ? "bg-blue-500/20 text-blue-300 border border-blue-500/40"
+                    ? "bg-blue-500/20 text-blue-300 border border-blue-500/40 shadow-sm"
                     : "bg-slate-950/40 text-slate-400 border border-slate-800/80 hover:bg-slate-800/50 hover:text-slate-200"
                 }`}
               >
@@ -258,7 +278,7 @@ export default function BrowseBooksPage() {
             </span>
             <button
               onClick={handleResetFilters}
-              className="flex items-center gap-1.5 text-blue-400 hover:text-blue-300 transition-colors"
+              className="flex items-center gap-1.5 text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" /> Reset Filters
             </button>
@@ -270,17 +290,17 @@ export default function BrowseBooksPage() {
           <BookGridSkeleton />
         ) : error ? (
           <div className="text-center py-16 bg-red-950/10 border border-red-500/20 rounded-3xl space-y-3">
-            <p className="text-red-400 font-medium">{error}</p>
+            <p className="text-red-400 font-medium text-sm">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 text-xs bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all"
+              className="px-4 py-2 text-xs bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all cursor-pointer"
             >
               Try Again
             </button>
           </div>
         ) : paginatedBooks.length === 0 ? (
           <div className="text-center py-20 bg-slate-900/40 border border-slate-800/60 rounded-3xl space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center mx-auto text-slate-400">
+            <div className="w-12 h-12 rounded-2xl bg-slate-800/80 border border-slate-700/50 flex items-center justify-center mx-auto text-slate-400">
               <BookMarked className="w-6 h-6" />
             </div>
             <h3 className="text-lg font-semibold text-white">No Books Found</h3>
@@ -289,7 +309,7 @@ export default function BrowseBooksPage() {
             </p>
             <button
               onClick={handleResetFilters}
-              className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium text-xs rounded-2xl shadow-lg shadow-blue-500/20"
+              className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium text-xs rounded-2xl shadow-lg shadow-blue-500/20 hover:scale-105 transition-transform cursor-pointer"
             >
               Clear All Filters
             </button>
@@ -299,7 +319,7 @@ export default function BrowseBooksPage() {
             layout
             className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
           >
-            <AnimatePresence>
+            <AnimatePresence mode="popLayout">
               {paginatedBooks.map((book) => (
                 <BookCard key={book._id} book={book} />
               ))}
@@ -313,7 +333,7 @@ export default function BrowseBooksPage() {
             <button
               onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
               disabled={currentPage === 1}
-              className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800 transition-all"
+              className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800 transition-all cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -322,7 +342,7 @@ export default function BrowseBooksPage() {
               <button
                 key={page}
                 onClick={() => setCurrentPage(page)}
-                className={`w-9 h-9 rounded-xl text-xs font-semibold transition-all ${
+                className={`w-9 h-9 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                   currentPage === page
                     ? "bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20"
                     : "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800"
@@ -335,12 +355,13 @@ export default function BrowseBooksPage() {
             <button
               onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800 transition-all"
+              className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800 transition-all cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         )}
+
       </div>
     </div>
   );
@@ -369,11 +390,11 @@ function BookCard({ book }: { book: Book }) {
 
         {/* Top Badges */}
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 z-10">
-          <span className="px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/10 text-[10px] font-semibold text-slate-200">
+          <span className="px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/10 text-[10px] font-semibold text-slate-200 shadow-sm">
             {book.category}
           </span>
           <span
-            className={`px-2.5 py-1 rounded-full backdrop-blur-md text-[10px] font-semibold flex items-center gap-1 border ${
+            className={`px-2.5 py-1 rounded-full backdrop-blur-md text-[10px] font-semibold flex items-center gap-1 border shadow-sm ${
               book.type === "PDF"
                 ? "bg-purple-950/80 text-purple-300 border-purple-500/30"
                 : book.type === "Physical"
@@ -398,7 +419,7 @@ function BookCard({ book }: { book: Book }) {
             {book.title}
           </h2>
           <div className="flex items-center gap-1.5 text-xs text-slate-400">
-            <User className="w-3.5 h-3.5 text-slate-500" />
+            <User className="w-3.5 h-3.5 text-slate-500 shrink-0" />
             <span className="truncate">{book.author}</span>
           </div>
         </div>

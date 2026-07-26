@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { useSession } from "@/lib/auth-client"; // Better Auth Client Hook
+import { useSession } from "@/lib/auth-client";
 import { motion } from "framer-motion";
 import { 
   ArrowLeft, 
@@ -20,7 +20,8 @@ import {
   Clock, 
   Share2,
   Mail,
-  ShieldCheck
+  ShieldCheck,
+  Check
 } from "lucide-react";
 
 // Interfaces
@@ -63,6 +64,7 @@ export default function BookDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isRequesting, setIsRequesting] = useState<boolean>(false);
   const [requestSuccess, setRequestSuccess] = useState<boolean>(false);
+  const [copied, setCopied] = useState<boolean>(false);
 
   useEffect(() => {
     if (!bookId) return;
@@ -76,7 +78,7 @@ export default function BookDetailPage() {
         const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/books/${bookId}`);
 
         if (!res.ok) {
-          throw new Error("Failed to fetch book details");
+          throw new Error("Failed to fetch book details.");
         }
 
         const data = await res.json();
@@ -110,7 +112,6 @@ export default function BookDetailPage() {
 
   const handleBorrowRequest = async () => {
     if (!user) {
-      alert("Please log in to request a book.");
       router.push("/login");
       return;
     }
@@ -134,18 +135,29 @@ export default function BookDetailPage() {
         }
       );
 
-      const data = await res.json();
-
       if (res.ok) {
         setRequestSuccess(true);
-        console.log(data.message);
       } else {
-        console.log(data.message);
+        const data = await res.json();
+        setError(data.message || "Failed to send request.");
       }
     } catch (err) {
       console.error(err);
     } finally {
       setIsRequesting(false);
+    }
+  };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: book?.title || "Book Details",
+        url: window.location.href,
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -162,7 +174,7 @@ export default function BookDetailPage() {
           <p className="text-slate-400 text-sm">{error || "The book you are looking for does not exist."}</p>
           <button
             onClick={() => router.push("/books")}
-            className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl text-xs font-semibold transition-all"
+            className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl text-xs font-semibold transition-all cursor-pointer"
           >
             Back to Browse Books
           </button>
@@ -173,15 +185,16 @@ export default function BookDetailPage() {
 
   const isPDF = book.type === "PDF" || book.type === "Both";
   const isPhysical = book.type === "Physical" || book.type === "Both";
+  const isOwner = user?.id && user.id === book.ownerId;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 pt-28 pb-16 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-950 text-slate-100 pt-28 pb-16 px-4 sm:px-6 lg:px-8 selection:bg-blue-500 selection:text-white">
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* Back Button */}
         <button
           onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white bg-slate-900/80 hover:bg-slate-800 px-4 py-2 rounded-2xl border border-slate-800/80 transition-all"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white bg-slate-900/80 hover:bg-slate-800 px-4 py-2.5 rounded-2xl border border-slate-800/80 transition-all cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Books
         </button>
@@ -232,7 +245,7 @@ export default function BookDetailPage() {
 
           {/* Right Column: Book Details & Owner */}
           <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
-            <div className="space-y-4">
+            <div className="space-y-5">
               
               {/* Title & Author */}
               <div className="space-y-2">
@@ -240,13 +253,13 @@ export default function BookDetailPage() {
                   {book.title}
                 </h1>
                 <div className="flex items-center gap-2 text-sm text-slate-400">
-                  <User className="w-4 h-4 text-blue-400" />
+                  <User className="w-4 h-4 text-blue-400 shrink-0" />
                   <span>By <strong className="text-slate-200">{book.author}</strong></span>
                 </div>
               </div>
 
               {/* Description */}
-              <div className="space-y-2 pt-2 border-t border-slate-800">
+              <div className="space-y-2 pt-3 border-t border-slate-800">
                 <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                   Description
                 </h3>
@@ -301,7 +314,7 @@ export default function BookDetailPage() {
               </div>
 
               {/* Metadata Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 {isPhysical && (
                   <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80 flex items-start gap-3">
                     <MapPin className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
@@ -342,11 +355,11 @@ export default function BookDetailPage() {
                 </div>
               ) : (
                 <div className="flex flex-col sm:flex-row items-center gap-3">
-                  {isPhysical && (
+                  {isPhysical && !isOwner && (
                     <button
                       onClick={handleBorrowRequest}
                       disabled={book.status !== "Available" || isRequesting}
-                      className="w-full sm:flex-1 py-3.5 px-6 rounded-2xl font-semibold text-sm text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                      className="w-full sm:flex-1 py-3.5 px-6 rounded-2xl font-semibold text-sm text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       {isRequesting ? (
                         <>
@@ -365,28 +378,25 @@ export default function BookDetailPage() {
                       href={book.pdfUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full sm:flex-1 py-3.5 px-6 rounded-2xl font-semibold text-sm text-white bg-purple-600 hover:bg-purple-500 shadow-lg shadow-purple-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                      className="w-full sm:flex-1 py-3.5 px-6 rounded-2xl font-semibold text-sm text-white bg-purple-600 hover:bg-purple-500 shadow-lg shadow-purple-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <Download className="w-4 h-4" /> Open / Download PDF
                     </a>
                   )}
 
                   <button
-                    onClick={() => {
-                      if (navigator.share) {
-                        navigator.share({
-                          title: book.title,
-                          url: window.location.href,
-                        });
-                      } else {
-                        navigator.clipboard.writeText(window.location.href);
-                        alert("Link copied to clipboard!");
-                      }
-                    }}
-                    className="p-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/50 transition-all"
+                    onClick={handleShare}
+                    className="p-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/50 transition-all flex items-center justify-center gap-2 cursor-pointer"
                     title="Share Book"
                   >
-                    <Share2 className="w-4 h-4" />
+                    {copied ? (
+                      <>
+                        <Check className="w-4 h-4 text-emerald-400" />
+                        <span className="text-xs font-medium text-emerald-400 sm:hidden">Link Copied</span>
+                      </>
+                    ) : (
+                      <Share2 className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
               )}
