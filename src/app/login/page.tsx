@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { toast } from "sonner"; // ✅ Sonner Toast Import
 import { 
   BookOpen, 
   Mail, 
@@ -42,38 +43,47 @@ export default function LoginPage() {
         {
           onRequest: () => {
             setIsLoading(true);
+            toast.loading("Signing you in...", { id: "login-toast" }); // ✅ Loading Toast
           },
           onSuccess: () => {
             setIsLoading(false);
+            toast.success("Login successful! Redirecting...", { id: "login-toast" }); // ✅ Success Toast
             router.push("/");
           },
           onError: (ctx) => {
             setIsLoading(false);
-            setErrorMessage(ctx.error.message || "Invalid email or password.");
+            const msg = ctx.error.message || "Invalid email or password.";
+            setErrorMessage(msg);
+            toast.error(msg, { id: "login-toast" }); // ✅ Error Toast
           },
         }
       );
 
       if (error) {
-        setErrorMessage(error.message || "Login failed. Please try again.");
+        const msg = error.message || "Login failed. Please try again.";
+        setErrorMessage(msg);
+        toast.error(msg, { id: "login-toast" });
       }
     } catch (err: any) {
-      setErrorMessage(err?.message || "An unexpected error occurred.");
+      const msg = err?.message || "An unexpected error occurred.";
+      setErrorMessage(msg);
+      toast.error(msg, { id: "login-toast" });
     } finally {
       setIsLoading(false);
     }
   };
 
-//   const handleGoogleSignIn = async () => {
-//     try {
-//       await authClient.signIn.social({
-//         provider: "google",
-//         callbackURL: "/dashboard",
-//       });
-//     } catch (err: any) {
-//       setErrorMessage(err?.message || "Google sign-in failed.");
-//     }
-//   };
+  const handleGoogleSignIn = async () => {
+    try {
+      toast.loading("Connecting to Google...", { id: "social-toast" });
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
+    } catch (err: any) {
+      toast.error(err?.message || "Google sign-in failed.", { id: "social-toast" });
+    }
+  };
 
   return (
     <div className="min-h-dvh w-full bg-slate-950 flex items-center justify-center relative overflow-hidden px-4 py-12 selection:bg-blue-500 selection:text-white">
@@ -82,7 +92,6 @@ export default function LoginPage() {
       <div className="absolute top-1/4 left-1/4 w-[320px] sm:w-[450px] h-[320px] sm:h-[450px] bg-blue-600/15 rounded-full blur-[100px] sm:blur-[140px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-[320px] sm:w-[450px] h-[320px] sm:h-[450px] bg-indigo-600/15 rounded-full blur-[100px] sm:blur-[140px] pointer-events-none" />
 
-      {/* Register Page-এর সাথে মিলিয়ে max-w-xl উইডথ ব্যবহার করা হয়েছে */}
       <div className="max-w-xl w-full relative z-10 my-auto">
         
         {/* Brand Logo & Header */}
@@ -194,12 +203,10 @@ export default function LoginPage() {
             </span>
           </div>
 
-
           {/* Google Sign-In Button */}
-          {/* onClick={handleGoogleSignIn} */}
           <button
             type="button"
-            
+            onClick={handleGoogleSignIn}
             className="w-full py-3 px-4 rounded-2xl bg-slate-950 border border-slate-800 hover:bg-slate-800/80 text-slate-200 font-semibold text-sm transition-all flex items-center justify-center gap-3 shadow-sm cursor-pointer"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
