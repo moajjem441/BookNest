@@ -15,5 +15,8 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/share"],
+  matcher: [
+    "/share", 
+    "/books/:id" // ✅ / যোগ করা হয়েছে
+  ],
 };

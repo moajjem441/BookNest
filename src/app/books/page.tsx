@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner"; // 👈 Sonner ইম্পোর্ট করা হয়েছে
 import { 
   Search, 
   Filter, 
@@ -80,9 +81,21 @@ export default function BrowseBooksPage() {
         if (!res.ok) throw new Error("Failed to load books from server.");
         
         const data = await res.json();
-        setBooks(data.books || data);
+        const fetchedBooks = data.books || data;
+        setBooks(fetchedBooks);
+
+        // Sonner Success Toast
+        toast.success(`Loaded ${fetchedBooks.length} books successfully!`, {
+          id: "books-fetch-success",
+        });
       } catch (err: any) {
-        setError(err.message || "Something went wrong while fetching books.");
+        const errorMsg = err.message || "Something went wrong while fetching books.";
+        setError(errorMsg);
+        
+        // Sonner Error Toast
+        toast.error(errorMsg, {
+          id: "books-fetch-error",
+        });
       } finally {
         setIsLoading(false);
       }
@@ -125,7 +138,6 @@ export default function BrowseBooksPage() {
         } else if (selectedCat === "non-fiction") {
           matchesCategory = bookCat.includes("non-fiction");
         } else if (selectedCat === "others") {
-          // 'Others' ফিল্টারে চাপ দিলে যেসব ক্যাটাগরি মেনু লিস্টে নেই সেগুলো খুঁজে বের করবে
           matchesCategory = !standardCategories.some((sc) => bookCat.includes(sc));
         } else {
           matchesCategory = bookCat.includes(selectedCat) || bookCat === selectedCat;
@@ -172,6 +184,11 @@ export default function BrowseBooksPage() {
     setSelectedType("All");
     setSortBy("latest");
     setCurrentPage(1);
+
+    // Sonner Info Toast
+    toast.info("Filters reset to default", {
+      icon: "🔄",
+    });
   };
 
   return (

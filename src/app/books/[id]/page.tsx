@@ -3,9 +3,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
+
 import { useSession } from "@/lib/auth-client";
 import { motion } from "framer-motion";
+
+import { toast } from "sonner";
+
+
 import { 
   ArrowLeft, 
   BookOpen, 
@@ -53,8 +57,8 @@ export default function BookDetailPage() {
   const router = useRouter();
   const bookId = params?.id as string;
 
-  // Better Auth Session Hook
-  const { data: session } = useSession();
+  // 1. Better Auth Session Hook with isPending
+  const { data: session, isPending: isSessionLoading } = useSession();
   const user = session?.user;
 
   const [book, setBook] = useState<BookDetail | null>(null);
@@ -74,7 +78,7 @@ export default function BookDetailPage() {
         setIsLoading(true);
         setError(null);
 
-        // 1. Fetch Book Details
+        // Fetch Book Details
         const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/books/${bookId}`);
 
         if (!res.ok) {
@@ -85,7 +89,7 @@ export default function BookDetailPage() {
         const fetchedBook: BookDetail = data.book || data;
         setBook(fetchedBook);
 
-        // 2. Fetch Owner Info using ownerId
+        // Fetch Owner Info using ownerId
         if (fetchedBook?.ownerId) {
           setIsOwnerLoading(true);
           try {
@@ -110,43 +114,64 @@ export default function BookDetailPage() {
     fetchBookDataAndOwner();
   }, [bookId]);
 
-  const handleBorrowRequest = async () => {
-    if (!user) {
-      router.push("/login");
-      return;
-    }
+const handleBorrowRequest = async () => {
+  if (!user) {
+    router.push("/login");
+    return;
+  }
 
-    setIsRequesting(true);
+  setIsRequesting(true);
 
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_SERVER_URL}/books/${bookId}/request`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: user.name,
-            email: user.email,
-            ownerId: book?.ownerId,
-            ownerEmail: owner?.email,
-          }),
-        }
-      );
+  // JWT Token Retrieval
+  // let token: string | undefined;
+  // try {
+  //   const { data: tokenData } = await authClient.token();
+  //   token = tokenData?.token;
+  //   if (!token) {
+  //     throw new Error("No token received. Please login again.");
+  //   }
+  // } catch (tokenError: any) {
+  //   toast.error("Authentication failed. Please login again.");
+  //   setIsRequesting(false); // Fixed state setter
+  //   return;
+  // }
 
-      if (res.ok) {
-        setRequestSuccess(true);
-      } else {
-        const data = await res.json();
-        setError(data.message || "Failed to send request.");
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SERVER_URL}/books/${bookId}/request`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Authorization: `Bearer ${token}`,
+        },
+        
+
+        body: JSON.stringify({
+          name: user.name,
+          email: user.email,
+          ownerId: book?.ownerId,
+          ownerEmail: owner?.email,
+        }),
       }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsRequesting(false);
+    );
+
+    if (res.ok) {
+      setRequestSuccess(true);
+      toast.success("Borrow request sent successfully!");
+    } else {
+      const data = await res.json();
+      const errMsg = data.message || "Failed to send request.";
+      setError(errMsg);
+      toast.error(errMsg);
     }
-  };
+  } catch (err) {
+    console.error(err);
+    toast.error("Something went wrong while sending the request.");
+  } finally {
+    setIsRequesting(false);
+  }
+};
 
   const handleShare = () => {
     if (navigator.share) {
@@ -161,7 +186,8 @@ export default function BookDetailPage() {
     }
   };
 
-  if (isLoading) {
+  // 2. Wait until both Book data and Auth Session are fully loaded
+  if (isLoading || isSessionLoading) {
     return <BookDetailSkeleton />;
   }
 
@@ -185,7 +211,17 @@ export default function BookDetailPage() {
 
   const isPDF = book.type === "PDF" || book.type === "Both";
   const isPhysical = book.type === "Physical" || book.type === "Both";
-  const isOwner = user?.id && user.id === book.ownerId;
+  
+  // 3. Safe Type-String Comparison for Ownership
+  const isOwner = Boolean(
+  user?.id && 
+  book?.ownerId && 
+  String(user.id).trim() === String(book.ownerId).trim()
+);
+
+
+
+
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 pt-28 pb-16 px-4 sm:px-6 lg:px-8 selection:bg-blue-500 selection:text-white">
@@ -345,62 +381,79 @@ export default function BookDetailPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="pt-6 border-t border-slate-800 space-y-3">
-              {requestSuccess ? (
-                <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 flex items-center gap-3">
-                  <CheckCircle2 className="w-5 h-5 shrink-0" />
-                  <p className="text-xs font-medium">
-                    Borrow request sent successfully! The owner will contact you soon.
-                  </p>
-                </div>
-              ) : (
-                <div className="flex flex-col sm:flex-row items-center gap-3">
-                  {isPhysical && !isOwner && (
-                    <button
-                      onClick={handleBorrowRequest}
-                      disabled={book.status !== "Available" || isRequesting}
-                      className="w-full sm:flex-1 py-3.5 px-6 rounded-2xl font-semibold text-sm text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      {isRequesting ? (
-                        <>
-                          <Clock className="w-4 h-4 animate-spin" /> Requesting...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-4 h-4" /> Request to Borrow
-                        </>
-                      )}
-                    </button>
-                  )}
+           {/* Action Buttons */}
+<div className="pt-6 border-t border-slate-800 space-y-3">
+  {requestSuccess ? (
+    <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 flex items-center gap-3">
+      <CheckCircle2 className="w-5 h-5 shrink-0" />
+      <p className="text-xs font-medium">
+        Borrow request sent successfully! The owner will contact you soon.
+      </p>
+    </div>
+  ) : (
+    <div className="flex flex-col sm:flex-row items-center gap-3">
+      
+      {/* 👇 আপডেটেড Borrow Request Button (সবসময় দেখাবে, কিন্তু শর্ত অনুযায়ী ডিজেবল হবে) */}
+      {isPhysical && (
+        <button
+          onClick={handleBorrowRequest}
+          disabled={isOwner || book.status !== "Available" || isRequesting}
+          className={`w-full sm:flex-1 py-3.5 px-6 rounded-2xl font-semibold text-sm text-white shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            isOwner || book.status !== "Available"
+              ? "bg-slate-700 cursor-not-allowed shadow-none hover:bg-slate-700" // ডিজেবল স্টাইল
+              : "bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-blue-500/20"
+          }`}
+        >
+          {isRequesting ? (
+            <>
+              <Clock className="w-4 h-4 animate-spin" /> Requesting...
+            </>
+          ) : isOwner ? (
+            <>
+              <ShieldCheck className="w-4 h-4" /> You are the owner of this book
+            </>
+          ) : book.status !== "Available" ? (
+            <>
+              <XCircle className="w-4 h-4" /> Currently {book.status}
+            </>
+          ) : (
+            <>
+              <Send className="w-4 h-4" /> Request to Borrow
+            </>
+          )}
+        </button>
+      )}
 
-                  {isPDF && book.pdfUrl && (
-                    <a
-                      href={book.pdfUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full sm:flex-1 py-3.5 px-6 rounded-2xl font-semibold text-sm text-white bg-purple-600 hover:bg-purple-500 shadow-lg shadow-purple-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <Download className="w-4 h-4" /> Open / Download PDF
-                    </a>
-                  )}
+      {/* PDF Download Link */}
+      {isPDF && book.pdfUrl && (
+        <a
+          href={book.pdfUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full sm:flex-1 py-3.5 px-6 rounded-2xl font-semibold text-sm text-white bg-purple-600 hover:bg-purple-500 shadow-lg shadow-purple-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <Download className="w-4 h-4" /> Open / Download PDF
+        </a>
+      )}
 
-                  <button
-                    onClick={handleShare}
-                    className="p-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/50 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                    title="Share Book"
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="w-4 h-4 text-emerald-400" />
-                        <span className="text-xs font-medium text-emerald-400 sm:hidden">Link Copied</span>
-                      </>
-                    ) : (
-                      <Share2 className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-              )}
-            </div>
+      {/* Share Button (অপরিবর্তিত) */}
+      <button
+        onClick={handleShare}
+        className="p-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/50 transition-all flex items-center justify-center gap-2 cursor-pointer"
+        title="Share Book"
+      >
+        {copied ? (
+          <>
+            <Check className="w-4 h-4 text-emerald-400" />
+            <span className="text-xs font-medium text-emerald-400 sm:hidden">Link Copied</span>
+          </>
+        ) : (
+          <Share2 className="w-4 h-4" />
+        )}
+      </button>
+    </div>
+  )}
+</div>
 
           </div>
 
