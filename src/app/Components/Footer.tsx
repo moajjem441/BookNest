@@ -181,6 +181,7 @@ export default function Footer() {
 
         </div>
       </div>
+      
 
       {/* ===== Bottom Copyright Bar ===== */}
       <div className="relative border-t border-slate-800/80 bg-slate-950/50">
