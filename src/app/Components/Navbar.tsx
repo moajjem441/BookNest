@@ -213,20 +213,7 @@ export default function Navbar() {
                         >
                           <User className="w-4 h-4 text-blue-400" /> My Profile
                         </Link>
-                        <Link
-                          href="/dashboard"
-                          onClick={() => setIsDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-gradient-to-r hover:from-blue-600/20 hover:to-transparent rounded-xl transition-colors"
-                        >
-                          <LayoutDashboard className="w-4 h-4 text-blue-400" /> Dashboard
-                        </Link>
-                        <Link
-                          href="/my-books"
-                          onClick={() => setIsDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-gradient-to-r hover:from-blue-600/20 hover:to-transparent rounded-xl transition-colors"
-                        >
-                          <Bookmark className="w-4 h-4 text-blue-400" /> My Shared Books
-                        </Link>
+                       
                       </div>
 
                       <div className="h-[1px] bg-slate-800 my-1" />
@@ -338,20 +325,7 @@ export default function Navbar() {
                     >
                       <User className="w-5 h-5 text-blue-400" /> Profile
                     </Link>
-                    <Link
-                      href="/dashboard"
-                      onClick={() => setIsMobileOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 rounded-2xl text-base font-medium text-slate-300 hover:bg-white/5"
-                    >
-                      <LayoutDashboard className="w-5 h-5 text-blue-400" /> Dashboard
-                    </Link>
-                    <Link
-                      href="/my-books"
-                      onClick={() => setIsMobileOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 rounded-2xl text-base font-medium text-slate-300 hover:bg-white/5"
-                    >
-                      <Bookmark className="w-5 h-5 text-blue-400" /> My Shared Books
-                    </Link>
+                   
                   </div>
                 )}
               </div>
