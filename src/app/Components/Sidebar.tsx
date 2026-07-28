@@ -26,7 +26,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     { name: "Shared Books", href: "/dashboard/shared-books", icon: BookOpen },
     { name: "Added Books", href: "/dashboard/added-books", icon: PlusCircle },
     { name: "Borrowed Requests", href: "/dashboard/borrowed-requests", icon: Bookmark },
-    { name: "Profile", href: "/dashboard/profile", icon: User },
+    // { name: "Profile", href: "/dashboard/profile", icon: User },
    
   ];
 
