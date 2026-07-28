@@ -180,12 +180,7 @@ export default function DashboardPage() {
             <h2 className="text-base font-semibold text-white">Recent Activities</h2>
             <p className="text-xs text-slate-400 mt-0.5">Your latest interactions in the library</p>
           </div>
-          <Link
-            href="/dashboard/requests"
-            className="inline-flex items-center gap-1 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors"
-          >
-            View All <ArrowUpRight className="w-3.5 h-3.5" />
-          </Link>
+          
         </div>
 
         <div className="overflow-x-auto">
