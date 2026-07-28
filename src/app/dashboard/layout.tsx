@@ -13,12 +13,12 @@ export default function DashboardLayout({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className=" mt-5  min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       {/* Top Navbar */}
       <Navbar />
 
       {/* Mobile Toggle Bar (শুধুমাত্র ছোট স্ক্রিনে দেখাবে) */}
-      <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-slate-900/80 border-b border-slate-800 sticky top-16 z-30 backdrop-blur-md">
+      <div className="lg:hidden mt-20 flex items-center justify-between px-4 py-3 bg-slate-900/80 border-b border-slate-800 sticky top-16 z-30 backdrop-blur-md">
         <button
           onClick={() => setIsMobileOpen(true)}
           className="inline-flex items-center gap-2 text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-xl border border-slate-700/50 transition-all cursor-pointer"
