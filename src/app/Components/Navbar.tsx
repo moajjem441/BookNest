@@ -38,6 +38,8 @@ const LOGGED_IN_NAV_ITEMS: NavItem[] = [
   { label: "Browse Books", href: "/books" },
   { label: "Share Book", href: "/share" },
   { label: "Dashboard", href: "/dashboard" },
+   { label: "About", href: "/about" },
+  { label: "Contact Us", href: "/contact" },
 ];
 
 export default function Navbar() {
@@ -159,12 +161,6 @@ export default function Navbar() {
             </div>
           ) : isAuthenticated ? (
             <>
-              <button
-                aria-label="Notifications"
-                className="p-2.5 rounded-2xl text-slate-300 hover:text-white hover:bg-white/10 transition-colors border border-transparent hover:border-white/10"
-              >
-                <Bell className="w-5 h-5" />
-              </button>
 
               {/* Profile Dropdown */}
               <div className="relative" ref={dropdownRef}>
