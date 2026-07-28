@@ -27,7 +27,7 @@ export default function DashboardLayout({
       </div>
 
       {/* Footer */}
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 }
