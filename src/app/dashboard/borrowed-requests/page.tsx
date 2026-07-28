@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from '@/lib/auth-client';
+import { toast } from 'sonner';
 import { 
   BookOpen, 
   Loader2, 
@@ -13,7 +14,8 @@ import {
   Calendar,
   Tag,
   User,
-  Trash2
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -68,6 +70,11 @@ export default function BorrowRequestsPage() {
         setRequests(Array.isArray(data) ? data : []);
       } catch (err: any) {
         setError(err.message);
+        showCustomToast({
+          type: 'error',
+          title: 'Fetch Error',
+          description: err.message || 'Failed to load borrow requests.',
+        });
       } finally {
         setIsLoading(false);
       }
@@ -76,12 +83,74 @@ export default function BorrowRequestsPage() {
     fetchBorrowRequests();
   }, [email, isSessionLoading]);
 
-  // Handle Cancel Request Action
-  const handleCancelRequest = async (requestId: string) => {
-    const confirmCancel = window.confirm('Are you sure you want to cancel this borrow request?');
-    if (!confirmCancel) return;
+  // Project-Matched Custom Toast Renderer
+  const showCustomToast = ({
+    type,
+    title,
+    description,
+    id,
+  }: {
+    type: 'success' | 'error' | 'loading';
+    title: string;
+    description?: string;
+    id?: string | number;
+  }) => {
+    return toast.custom(
+      (t) => (
+        <div className="flex items-start gap-3 p-4 rounded-xl bg-slate-900/95 border border-slate-800 text-slate-100 shadow-2xl backdrop-blur-xl max-w-md w-full">
+          {type === 'loading' && <Loader2 className="w-5 h-5 animate-spin text-blue-400 shrink-0 mt-0.5" />}
+          {type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />}
+          {type === 'error' && <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />}
+          
+          <div className="flex-1">
+            <h4 className="text-xs sm:text-sm font-semibold text-slate-100">{title}</h4>
+            {description && <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">{description}</p>}
+          </div>
+        </div>
+      ),
+      { id }
+    );
+  };
 
+  // Custom Styled Confirmation Toast
+  const handleCancelRequest = (requestId: string, bookTitle: string) => {
+    toast.custom((t) => (
+      <div className="p-4 rounded-xl bg-slate-900/95 border border-slate-800 shadow-2xl backdrop-blur-xl max-w-md w-full space-y-3">
+        <div className="flex items-center gap-2.5 text-amber-400">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <h4 className="text-xs sm:text-sm font-semibold text-slate-100">Cancel Request?</h4>
+        </div>
+        <p className="text-[11px] text-slate-400 leading-relaxed">
+          Are you sure you want to cancel your borrow request for <span className="text-slate-200 font-medium">"{bookTitle}"</span>?
+        </p>
+        <div className="flex items-center justify-end gap-2 pt-1">
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-colors"
+          >
+            Keep Request
+          </button>
+          <button
+            onClick={() => {
+              toast.dismiss(t);
+              executeCancelRequest(requestId);
+            }}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-colors"
+          >
+            Confirm Cancel
+          </button>
+        </div>
+      </div>
+    ));
+  };
+
+  const executeCancelRequest = async (requestId: string) => {
     setCancelingId(requestId);
+    const toastId = showCustomToast({
+      type: 'loading',
+      title: 'Processing Action',
+      description: 'Canceling your borrow request...',
+    });
 
     try {
       const res = await fetch(
@@ -99,16 +168,26 @@ export default function BorrowRequestsPage() {
         throw new Error(errData.error || errData.message || 'Failed to cancel request');
       }
 
-      // Filter out the canceled request from state
       setRequests((prev) => prev.filter((item) => item._id !== requestId));
+
+      showCustomToast({
+        id: toastId,
+        type: 'success',
+        title: 'Request Canceled',
+        description: 'The borrow request was successfully removed.',
+      });
     } catch (err: any) {
-      alert(err.message || 'Something went wrong while canceling.');
+      showCustomToast({
+        id: toastId,
+        type: 'error',
+        title: 'Action Failed',
+        description: err.message || 'Something went wrong while canceling.',
+      });
     } finally {
       setCancelingId(null);
     }
   };
 
-  // Helper function to render status badges
   const renderStatusBadge = (status: string) => {
     const s = status?.toLowerCase();
     if (s === 'approved') {
@@ -135,7 +214,6 @@ export default function BorrowRequestsPage() {
     );
   };
 
-  // Loading State
   if (isSessionLoading || isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-3">
@@ -145,7 +223,6 @@ export default function BorrowRequestsPage() {
     );
   }
 
-  // Not Logged In State
   if (!session) {
     return (
       <div className="p-8 text-center rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md max-w-md mx-auto space-y-4 my-10">
@@ -162,7 +239,6 @@ export default function BorrowRequestsPage() {
     );
   }
 
-  // Error State
   if (error) {
     return (
       <div className="p-6 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-center max-w-lg mx-auto space-y-3 my-8">
@@ -175,7 +251,6 @@ export default function BorrowRequestsPage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      {/* Header Section */}
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
           My Pending Requests
@@ -185,7 +260,6 @@ export default function BorrowRequestsPage() {
         </p>
       </div>
 
-      {/* Main Content Area */}
       <div className="p-5 sm:p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md">
         {requests.length === 0 ? (
           <div className="text-center py-12 space-y-3">
@@ -209,7 +283,6 @@ export default function BorrowRequestsPage() {
                   className="p-4 rounded-xl bg-slate-950/40 border border-slate-800/80 hover:border-slate-700/80 transition-all flex flex-col justify-between group"
                 >
                   <div className="flex gap-4">
-                    {/* Book Cover Image */}
                     <div className="relative w-24 h-36 shrink-0 rounded-lg overflow-hidden bg-slate-800 border border-slate-700/50 flex items-center justify-center">
                       {item.coverImage ? (
                         <Image
@@ -224,7 +297,6 @@ export default function BorrowRequestsPage() {
                       )}
                     </div>
 
-                    {/* Details Section */}
                     <div className="flex-1 flex flex-col justify-between overflow-hidden">
                       <div>
                         <div className="flex items-start justify-between gap-2">
@@ -234,14 +306,12 @@ export default function BorrowRequestsPage() {
                           {renderStatusBadge(item.status)}
                         </div>
 
-                        {/* Author Name */}
                         {item.bookAuthor && (
                           <p className="text-xs text-slate-400 mt-0.5 truncate">
                             by <span className="text-slate-300 font-medium">{item.bookAuthor}</span>
                           </p>
                         )}
 
-                        {/* Category Badge */}
                         {item.category && (
                           <div className="mt-1.5">
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
@@ -251,14 +321,12 @@ export default function BorrowRequestsPage() {
                           </div>
                         )}
 
-                        {/* Book Description */}
                         {item.description && (
                           <p className="text-[11px] text-slate-400/90 mt-1.5 line-clamp-2 leading-relaxed">
                             {item.description}
                           </p>
                         )}
 
-                        {/* Borrower Info */}
                         {(item.borrowerName || item.borrowerEmail) && (
                           <div className="mt-2 pt-2 border-t border-slate-800/40 text-[13px] space-y-0.5">
                             <p className="text-slate-400 flex items-center gap-1.5 truncate">
@@ -276,7 +344,6 @@ export default function BorrowRequestsPage() {
                           </div>
                         )}
 
-                        {/* Owner Email */}
                         {item.ownerEmail && (
                           <p className="text-[11px] text-slate-500 mt-1 truncate">
                             Owner: <span className="text-slate-400">{item.ownerEmail}</span>
@@ -286,7 +353,6 @@ export default function BorrowRequestsPage() {
                     </div>
                   </div>
 
-                  {/* Bottom Meta & Cancel Action */}
                   <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-[10px] text-slate-400">
                     <span className="inline-flex items-center gap-1">
                       <Calendar className="w-3 h-3 text-slate-500" />
@@ -303,12 +369,11 @@ export default function BorrowRequestsPage() {
                         </span>
                       )}
 
-                      {/* Cancel Button - Only allow canceling pending requests */}
                       {item.status?.toLowerCase() === 'pending' && (
                         <button
-                          onClick={() => handleCancelRequest(item._id)}
+                          onClick={() => handleCancelRequest(item._id, item.bookTitle)}
                           disabled={isCanceling}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                         >
                           {isCanceling ? (
                             <Loader2 className="w-3 h-3 animate-spin" />
