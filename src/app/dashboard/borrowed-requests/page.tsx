@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSession } from '@/lib/auth-client';
+import { authClient, useSession } from '@/lib/auth-client';
 import { toast } from 'sonner';
 import { 
   BookOpen, 
@@ -43,6 +43,8 @@ export default function BorrowRequestsPage() {
   const [cancelingId, setCancelingId] = useState<string | null>(null);
 
   const email = session?.user?.email;
+ 
+  
 
   useEffect(() => {
     if (isSessionLoading || !email) return;
@@ -57,6 +59,7 @@ export default function BorrowRequestsPage() {
           {
             headers: {
               'Content-Type': 'application/json',
+            //   Authorization: `Bearer ${token}`,
             },
           }
         );
