@@ -7,8 +7,8 @@ BookNest is a modern full-stack web application that enables users to share phys
 ## 🌐 Live Demo
 
 * 🚀 **Live Site:** https://your-live-demo-link.com
-* 💻 **Client Repository:** https://github.com/yourusername/booknest-client
-* ⚙️ **Server Repository:** https://github.com/yourusername/booknest-server
+* 💻 **Client Repository:** https://github.com/moajjem441/BookNest
+* ⚙️ **Server Repository:** https://github.com/moajjem441/BookNest-server
 
 ---
 
