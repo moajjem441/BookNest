@@ -1,157 +1,454 @@
-# 📚 BookNest - Book Sharing Platform
+# 📚 BookNest – Community Book Sharing Platform
 
-BookNest is a full-stack web application that allows users to share physical books and PDF resources within a community. It features authentication, book listings, borrowing requests, and a personalized dashboard.
+BookNest is a modern full-stack web application that enables users to share physical books and digital PDF resources within a community. Users can publish books, request to borrow books, manage their personal library through a personalized dashboard, and securely access approved digital resources. The platform also includes an admin dashboard for managing borrow requests and maintaining the platform.
 
-## ✨ Features
+---
 
-### 👤 Comprehensive User Dashboard
+## 🌐 Live Demo
 
-- **Dynamic Metric Cards**: Quick real-time overview displaying:
-  - **Total Shared Books**: Count of books contributed by the user.
-  - **Pending Requests**: Count of active borrow requests waiting for admin decision.
-  - **Borrowed Books**: Count of currently approved and active borrowed books.
+* 🚀 **Live Site:** https://your-live-demo-link.com
+* 💻 **Client Repository:** https://github.com/yourusername/booknest-client
+* ⚙️ **Server Repository:** https://github.com/yourusername/booknest-server
 
-- **Sidebar Navigation**:
-  - 🏠 **Dashboard Overview**: Quick statistics and platform activity summary.
-  - 📚 **Shared Books (My Books)**: Manage, edit, or remove books you have uploaded/shared.
-  - 📬 **Borrow Requests**: Track status of all your sent borrow requests (`Pending`, `Approved`, `Rejected`).
-  - 📖 **Borrowed Books**: Access full details and content/PDFs for all approved borrowed books.
-  - ➕ **Add Book**: Form to publish new physical or digital (PDF) book listings.
+---
 
-### 🛡️ Admin Management Dashboard
+## ✨ Key Features
 
-- **Request Approvals**: Review incoming borrow requests and either **Approve** or **Reject** them.
-- **Automated Book State Sync**: Approving a request automatically updates the corresponding book's status to `Borrowed` in `booksCollection`.
-- **Content Moderation**: Delete invalid requests, spam listings, or remove outdated books.
-- **User & Inventory Oversight**: System-wide monitoring of total books, active requests, and general user interactions.
+* 🔐 Secure authentication using Better Auth with JWT.
+* 📚 Share both physical books and PDF resources.
+* 📩 Borrow request system with approval workflow.
+* 👤 Personalized user dashboard with real-time statistics.
+* 🛡️ Role-based admin dashboard for request management.
+* 📱 Fully responsive modern UI.
+* 🎨 Smooth animations with Framer Motion.
+* 🔒 Protected routes for authenticated users.
+* ⚡ Fast and scalable architecture using Next.js and Express.
 
-### 🔐 General Features
+---
 
-- **Authentication**: Secure login and registration using **Better Auth** with JWT.
-- **Book Management**: Users can share books (Physical or PDF) with details like title, author, category, and cover image.
-- **Borrow Requests**: Users can request to borrow available physical books.
-- **Responsive UI**: Fully responsive and modern UI built with Tailwind CSS and Framer Motion animations.
-- **Protected Routes**: Ensures only authenticated users can access specific pages (e.g., `/share`, `/dashboard`, `/admin`).
+# 👤 User Dashboard
 
-## 🛠️ Tech Stack
+The user dashboard provides everything required to manage books and borrowing activities from one place.
 
-### Frontend
-- [Next.js 16](https://nextjs.org/) (React Framework)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Framer Motion](https://www.framer.com/motion/) (Animations)
-- [Lucide React](https://lucide.dev/) (Icons)
+### 📊 Dashboard Overview
 
-### Backend
-- [Node.js](https://nodejs.org/) / [Express.js](https://expressjs.com/)
-- [MongoDB](https://www.mongodb.com/) (NoSQL Database)
-- [Better Auth](https://better-auth.vercel.app/) (Authentication with JWT)
+Dynamic statistics cards displaying:
 
-### Tools & Environment
-- TypeScript / JavaScript
-- Nodemon (Development)
-- Dotenv (Environment Variables)
+* Total Shared Books
+* Pending Borrow Requests
+* Currently Borrowed Books
 
-## 🚀 Getting Started
+### 📂 Sidebar Navigation
 
-### Prerequisites
-- Node.js (v18 or later)
-- npm or yarn
-- MongoDB Atlas Account or Local MongoDB Instance
+* 🏠 Dashboard Overview
+* 📚 My Shared Books
+* 📬 Borrow Requests
+* 📖 Borrowed Books
+* ➕ Share New Book
 
-### Installation
+### 📚 Shared Books
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/your-username/booknest.git
-   cd booknest
-Install Frontend Dependencies
+Users can:
 
-bash
-npm install
-# or
-yarn install
-Install Backend Dependencies (if backend is in a separate folder)
+* Add new books
+* Edit book information
+* Delete shared books
+* View borrowing status
 
-bash
-cd server # or your backend folder name
-npm install
-cd ..
-Environment Variables
-Create a .env.local file in the Frontend Root and a .env file in the Backend Root.
+### 📬 Borrow Requests
 
-Frontend (.env.local)
-text
+Track every request with status:
+
+* Pending
+* Approved
+* Rejected
+
+### 📖 Borrowed Books
+
+After approval users can:
+
+* View book details
+* Read available PDF resources
+* Track borrowed books
+
+---
+
+# 🛡️ Admin Dashboard
+
+The admin dashboard provides complete platform management.
+
+### Request Management
+
+* Review borrow requests
+* Approve requests
+* Reject requests
+* Delete invalid requests
+
+### Book Management
+
+* Remove inappropriate books
+* Manage all shared books
+* Monitor inventory
+
+### Automatic Book Status Synchronization
+
+When an admin approves a borrow request:
+
+* Borrow request status becomes **Approved**
+* Book status automatically changes to **Borrowed**
+
+This keeps data synchronized across the platform.
+
+### Platform Monitoring
+
+Admin can monitor:
+
+* Total users
+* Total books
+* Active borrow requests
+* Platform activity
+
+---
+
+# 🔐 Authentication & Authorization
+
+* Better Auth Authentication
+* JWT Authorization
+* Protected Routes
+* Role-Based Access Control
+* Session Management
+
+---
+
+# 📚 Book Management
+
+Users can share books with:
+
+* Title
+* Author
+* Category
+* Description
+* Cover Image
+* Book Type (Physical/PDF)
+
+---
+
+# 📥 Borrow Workflow
+
+1. User opens a book.
+2. Clicks **Borrow Book**.
+3. Borrow request is created.
+4. Admin reviews the request.
+5. Admin approves or rejects.
+6. Book status updates automatically.
+7. Approved users can access borrowed books.
+
+---
+
+# 📱 Responsive Design
+
+Optimized for:
+
+* Desktop
+* Laptop
+* Tablet
+* Mobile
+
+---
+
+# 🛠️ Tech Stack
+
+## Frontend
+
+* Next.js 16
+* React
+* TypeScript
+* Tailwind CSS
+* Framer Motion
+* Lucide React
+
+---
+
+## Backend
+
+* Node.js
+* Express.js
+* MongoDB
+* Better Auth
+* JWT
+
+---
+
+## Development Tools
+
+* TypeScript
+* JavaScript
+* Nodemon
+* Dotenv
+* Git
+* GitHub
+
+---
+
+# 📁 Project Structure
+
+```text
+booknest/
+├── src/
+│   ├── app/
+│   │   ├── admin/
+│   │   ├── dashboard/
+│   │   ├── books/
+│   │   ├── share/
+│   │   ├── borrowed-books/
+│   │   ├── borrow-requests/
+│   │   ├── my-books/
+│   │   └── api/
+│   │
+│   ├── components/
+│   ├── hooks/
+│   ├── lib/
+│   │   ├── auth.ts
+│   │   ├── auth-client.ts
+│   │   └── mongodb.ts
+│   │
+│   ├── types/
+│   └── utils/
+│
+├── server/
+│   ├── index.js
+│   ├── middleware/
+│   └── routes/
+│
+├── public/
+├── .env.local
+├── package.json
+├── next.config.ts
+└── tailwind.config.js
+```
+
+---
+
+# 🗄️ Database Collections
+
+```text
+users
+books
+borrowRequests
+```
+
+---
+
+# 📡 REST API Endpoints
+
+| Method | Endpoint                        | Description               | Authentication |
+| ------ | ------------------------------- | ------------------------- | -------------- |
+| POST   | /books                          | Share a new book          | ✅              |
+| GET    | /books                          | Get all books             | ❌              |
+| GET    | /books/:id                      | Get book details          | ❌              |
+| DELETE | /books/:id                      | Delete own book           | ✅              |
+| POST   | /books/:id/request              | Borrow a book             | ✅              |
+| GET    | /dashboard/books                | User dashboard statistics | ✅              |
+| GET    | /dashboard/borrowRequests/email | User borrow requests      | ✅              |
+| PATCH  | /borrow-requests/:id            | Approve/Reject request    | ✅ Admin        |
+| GET    | /users/:id                      | User information          | ❌              |
+
+---
+
+# ⚙️ Environment Variables
+
+## Frontend (.env.local)
+
+```env
 NEXT_PUBLIC_SERVER_URL=http://localhost:5000
 NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
-Backend (.env)
-text
+```
+
+## Backend (.env)
+
+```env
 PORT=5000
 MONGODB_URI=your_mongodb_connection_string
 CLIENT_URL=http://localhost:3000
-Running the Application
-Start the Backend Server (from the backend folder)
+JWT_SECRET=your_secret_key
+```
 
-bash
+---
+
+# 🚀 Getting Started
+
+## Prerequisites
+
+* Node.js (v18+)
+* npm or yarn
+* MongoDB Atlas or Local MongoDB
+
+---
+
+## Installation
+
+### Clone Repository
+
+```bash
+git clone https://github.com/yourusername/booknest.git
+
+cd booknest
+```
+
+### Install Frontend
+
+```bash
+npm install
+```
+
+or
+
+```bash
+yarn install
+```
+
+### Install Backend
+
+```bash
+cd server
+
+npm install
+
+cd ..
+```
+
+---
+
+## Start Backend
+
+```bash
+cd server
+
 npm run dev
-# or
-nodemon index.js
-Server will run on http://localhost:5000
+```
 
-Start the Frontend Server (from the root folder)
+Server runs on:
 
-bash
+```
+http://localhost:5000
+```
+
+---
+
+## Start Frontend
+
+```bash
 npm run dev
-# or
-yarn dev
-App will run on http://localhost:3000
+```
 
-Open http://localhost:3000 in your browser.
+Application runs on:
 
-📁 Project Structure
-text
-booknest/
-├── src/
-│   ├── app/                 # Next.js App Router
-│   │   ├── admin/           # Admin Dashboard Pages
-│   │   ├── api/             # API Routes (Backend for Next.js)
-│   │   ├── books/           # Books Pages
-│   │   ├── dashboard/       # User Dashboard Page
-│   │   ├── share/           # Share Book Page
-│   │   ├── my-books/        # My Shared Books Page
-│   │   ├── borrow-requests/ # Borrow Requests Tracking Page
-│   │   └── borrowed-books/  # Approved Borrowed Books Page
-│   ├── components/          # Reusable React Components
-│   ├── lib/                 # Utilities, Auth Client, DB Config
-│   │   ├── auth-client.ts   # Better Auth Frontend Client
-│   │   └── auth.ts          # Better Auth Backend Config
-│   ├── hooks/               # Custom React Hooks
-│   └── types/               # TypeScript Interfaces
-├── server/                  # Express Backend (if separate)
-│   ├── index.js             # Entry point
-│   └── middleware/          # Custom Middlewares (verifyToken)
-├── public/                  # Static Assets
-├── .env.local               # Frontend Environment Variables
-├── next.config.ts           # Next.js Configuration
-├── tailwind.config.js       # Tailwind Configuration
-└── package.json
-📡 API Endpoints (Backend)
-Method	Endpoint	Description	Auth Required
-POST	/books	Create a new book share	✅ Yes
-GET	/books	Get all books	❌ No
-GET	/books/:id	Get a single book with details	❌ No
-DELETE	/books/:id	Delete a book (Owner only)	✅ Yes
-POST	/books/:id/request	Request to borrow a book	✅ Yes
-GET	/dashboard/books	Get shared books count	✅ Yes
-GET	/dashboard/borrowRequests/email	Get all requests & stats	✅ Yes
-PATCH	/borrow-requests/:id	Update request status (Approve/Reject)	✅ Yes (Admin)
-GET	/users/:id	Get user information	❌ No
-🤝 Contributing
-Contributions, issues, and feature requests are welcome! Feel free to check the issues page.
+```
+http://localhost:3000
+```
 
-📄 License
-This project is licensed under the MIT License - see the LICENSE file for details.
+---
 
-👥 Team
-Your Name - Initial work - Your Github
+# 📷 Screenshots
 
+Add screenshots inside a folder named **screenshots**.
+
+```text
+screenshots/
+├── home.png
+├── dashboard.png
+├── admin.png
+├── book-details.png
+└── borrow-request.png
+```
+
+Example:
+
+```md
+## Home
+
+![Home](./screenshots/home.png)
+
+## Dashboard
+
+![Dashboard](./screenshots/dashboard.png)
+
+## Admin
+
+![Admin](./screenshots/admin.png)
+```
+
+---
+
+# 🏗️ System Architecture
+
+```mermaid
+graph TD
+
+A[Next.js Frontend]
+
+--> B[Express Backend]
+
+B --> C[MongoDB]
+
+B --> D[Better Auth]
+
+B --> E[JWT Authentication]
+```
+
+---
+
+# 🚀 Deployment
+
+| Service  | Platform      |
+| -------- | ------------- |
+| Frontend | Vercel        |
+| Backend  | Render        |
+| Database | MongoDB Atlas |
+
+---
+
+# 🔮 Future Improvements
+
+* 📧 Email Notifications
+* ⭐ Book Ratings
+* 💬 User Messaging
+* ❤️ Wishlist
+* 🔎 Advanced Search & Filters
+* 📅 Borrow Return Management
+* 📖 Reading History
+* 🌙 Dark Mode
+* 🔔 Real-time Notifications
+
+---
+
+# 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome.
+
+If you'd like to improve this project:
+
+1. Fork the repository.
+2. Create a feature branch.
+3. Commit your changes.
+4. Push to your branch.
+5. Open a Pull Request.
+
+---
+
+# 📄 License
+
+This project is licensed under the **MIT License**.
+
+---
+
+# 👨‍💻 Author
+
+**Moajjem Hossain**
+
+* GitHub: https://github.com/moajjem441
+* LinkedIn: https://linkedin.com/in/your-linkedin
+
+---
+
+⭐ If you found this project useful, consider giving it a **Star** on GitHub.
