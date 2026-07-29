@@ -107,6 +107,8 @@ export default function AdminManageBooksPage() {
   const handleDeleteBook = async () => {
     if (!bookToDelete) return;
 
+    console.log("bookto delete",bookToDelete._id);
+
     try {
       setIsDeleting(true);
       const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/books/${bookToDelete._id}`, {
@@ -119,6 +121,7 @@ export default function AdminManageBooksPage() {
 
       // UI state থেকে রিমুভ করা
       setBooks((prevBooks) => prevBooks.filter((book) => book._id !== bookToDelete._id));
+    
 
       toast.success(`"${bookToDelete.title}" deleted successfully!`, {
         id: "delete-book-success",
