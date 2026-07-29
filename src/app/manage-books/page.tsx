@@ -107,7 +107,7 @@ export default function AdminManageBooksPage() {
   const handleDeleteBook = async () => {
     if (!bookToDelete) return;
 
-    console.log("bookto delete",bookToDelete._id);
+    // console.log("bookto delete",bookToDelete._id);
 
     try {
       setIsDeleting(true);

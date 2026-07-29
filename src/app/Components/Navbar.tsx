@@ -65,7 +65,7 @@ export default function Navbar() {
   const isLoading = isPending;
 
   // ✅ Check if the logged-in user is an admin
-  const isAdmin = session?.user?.role === "admin";
+  const isAdmin = (session?.user as { role?: string } | undefined)?.role === "admin";
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);

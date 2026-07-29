@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 
-import { useSession } from "@/lib/auth-client";
+import { authClient, useSession } from "@/lib/auth-client";
 import { motion } from "framer-motion";
 
 import { toast } from "sonner";
@@ -123,18 +123,18 @@ const handleBorrowRequest = async () => {
   setIsRequesting(true);
 
   // JWT Token Retrieval
-  // let token: string | undefined;
-  // try {
-  //   const { data: tokenData } = await authClient.token();
-  //   token = tokenData?.token;
-  //   if (!token) {
-  //     throw new Error("No token received. Please login again.");
-  //   }
-  // } catch (tokenError: any) {
-  //   toast.error("Authentication failed. Please login again.");
-  //   setIsRequesting(false); // Fixed state setter
-  //   return;
-  // }
+  let token: string | undefined;
+  try {
+    const { data: tokenData } = await authClient.token()
+    token = tokenData?.token;
+    if (!token) {
+      throw new Error("No token received. Please login again.");
+    }
+  } catch (tokenError: any) {
+    toast.error("Authentication failed. Please login again.");
+    setIsRequesting(false); // Fixed state setter
+    return;
+  }
 
   try {
     const res = await fetch(
@@ -143,7 +143,7 @@ const handleBorrowRequest = async () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         
 

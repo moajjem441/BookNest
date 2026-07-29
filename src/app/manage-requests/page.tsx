@@ -26,16 +26,35 @@ import {
 // --- Types ---
 export interface BorrowRequest {
   _id: string;
-  userName: string;
-  userEmail: string;
+  userName?: string;
+  name?: string;
+  userEmail?: string;
+  email?: string;
   userImage?: string;
-  bookTitle: string;
+  image?: string;
+  bookTitle?: string;
+  title?: string;
   bookCover?: string;
-  requestDate: string;
-  status: "Pending" | "Approved" | "Rejected";
+  requestDate?: string;
+  createdAt?: string;
+  status: string;
+  user?: {
+    name?: string;
+    email?: string;
+    image?: string;
+  };
 }
 
 const ITEMS_PER_PAGE = 8;
+
+// Helper to normalize status strings to "Pending" | "Approved" | "Rejected"
+const normalizeStatus = (status?: string): "Pending" | "Approved" | "Rejected" => {
+  if (!status) return "Pending";
+  const s = status.trim().toLowerCase();
+  if (s === "approved") return "Approved";
+  if (s === "rejected") return "Rejected";
+  return "Pending";
+};
 
 export default function AdminManageRequestsPage() {
   // Data States
@@ -64,7 +83,7 @@ export default function AdminManageRequestsPage() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Fetch All Borrow Requests
+// Fetch All Borrow Requests
   const fetchRequests = async () => {
     try {
       setIsLoading(true);
@@ -76,7 +95,48 @@ export default function AdminManageRequestsPage() {
 
       const data = await res.json();
       const fetchedRequests = data.requests || data;
-      setRequests(fetchedRequests);
+
+      // Map & normalize incoming request objects safely
+      const normalized = (Array.isArray(fetchedRequests) ? fetchedRequests : []).map((req: any) => {
+        // Extract User Name across potential schema shapes
+        const extractedName =
+          req.userName ||
+          req.user_name ||
+          req.name ||
+          req.user?.name ||
+          req.user?.userName ||
+          req.user?.displayName ||
+          "N/A";
+
+        // Extract User Email across potential schema shapes
+        const extractedEmail =
+          req.userEmail ||
+          req.user_email ||
+          req.email ||
+          req.user?.email ||
+          "N/A";
+
+        // Extract User Image
+        const extractedImage =
+          req.userImage ||
+          req.user_image ||
+          req.image ||
+          req.user?.image ||
+          req.user?.avatar ||
+          "";
+
+        return {
+          ...req,
+          userName: extractedName,
+          userEmail: extractedEmail,
+          userImage: extractedImage,
+          bookTitle: req.bookTitle || req.title || req.book_title || req.book?.title || "Untitled Book",
+          requestDate: req.requestDate || req.createdAt || req.date || req.requestedAt || "",
+          status: normalizeStatus(req.status),
+        };
+      });
+
+      setRequests(normalized);
     } catch (err: any) {
       const errorMsg = err.message || "Error fetching requests.";
       setError(errorMsg);
@@ -144,11 +204,15 @@ export default function AdminManageRequestsPage() {
   const filteredRequests = useMemo(() => {
     return requests.filter((req) => {
       const query = debouncedSearch.trim().toLowerCase();
+      const userName = req.userName?.toLowerCase() || "";
+      const userEmail = req.userEmail?.toLowerCase() || "";
+      const bookTitle = req.bookTitle?.toLowerCase() || "";
+
       const matchesSearch =
         !query ||
-        req.userName?.toLowerCase().includes(query) ||
-        req.userEmail?.toLowerCase().includes(query) ||
-        req.bookTitle?.toLowerCase().includes(query);
+        userName.includes(query) ||
+        userEmail.includes(query) ||
+        bookTitle.includes(query);
 
       const matchesStatus =
         selectedStatus === "All" || req.status === selectedStatus;
@@ -308,7 +372,7 @@ export default function AdminManageRequestsPage() {
                             {req.userImage ? (
                               <Image
                                 src={req.userImage}
-                                alt={req.userName}
+                                alt={req.userName || "User"}
                                 width={36}
                                 height={36}
                                 className="object-cover w-full h-full"
@@ -318,7 +382,7 @@ export default function AdminManageRequestsPage() {
                             )}
                           </div>
                           <span className="font-semibold text-white group-hover:text-blue-400 transition-colors">
-                            {req.userName || "N/A"}
+                            {req.userName}
                           </span>
                         </div>
                       </td>
@@ -345,7 +409,7 @@ export default function AdminManageRequestsPage() {
                       <td className="py-4 px-6 text-slate-400 text-xs">
                         <div className="flex items-center gap-1.5">
                           <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                          {req.requestDate
+                          {req.requestDate && !isNaN(new Date(req.requestDate).getTime())
                             ? new Date(req.requestDate).toLocaleDateString("en-US", {
                                 year: "numeric",
                                 month: "short",
@@ -355,7 +419,7 @@ export default function AdminManageRequestsPage() {
                         </div>
                       </td>
 
-                      {/* Status */}
+                      {/* Status Badge */}
                       <td className="py-4 px-6">
                         <span
                           className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
@@ -376,25 +440,28 @@ export default function AdminManageRequestsPage() {
                       {/* Actions (Approve / Reject / Delete) */}
                       <td className="py-4 px-6 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {req.status === "Pending" && (
-                            <>
-                              <button
-                                disabled={updatingId === req._id}
-                                onClick={() => handleStatusUpdate(req._id, "Approved")}
-                                title="Approve Request"
-                                className="p-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all cursor-pointer disabled:opacity-50"
-                              >
-                                <CheckCircle2 className="w-4 h-4" />
-                              </button>
-                              <button
-                                disabled={updatingId === req._id}
-                                onClick={() => handleStatusUpdate(req._id, "Rejected")}
-                                title="Reject Request"
-                                className="p-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 transition-all cursor-pointer disabled:opacity-50"
-                              >
-                                <XCircle className="w-4 h-4" />
-                              </button>
-                            </>
+                          {/* Approve Button (Visible if not already approved) */}
+                          {req.status !== "Approved" && (
+                            <button
+                              disabled={updatingId === req._id}
+                              onClick={() => handleStatusUpdate(req._id, "Approved")}
+                              title="Approve Request"
+                              className="p-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all cursor-pointer disabled:opacity-50"
+                            >
+                              <CheckCircle2 className="w-4 h-4" />
+                            </button>
+                          )}
+
+                          {/* Reject Button (Visible if not already rejected) */}
+                          {req.status !== "Rejected" && (
+                            <button
+                              disabled={updatingId === req._id}
+                              onClick={() => handleStatusUpdate(req._id, "Rejected")}
+                              title="Reject Request"
+                              className="p-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 transition-all cursor-pointer disabled:opacity-50"
+                            >
+                              <XCircle className="w-4 h-4" />
+                            </button>
                           )}
 
                           {/* Delete Button */}

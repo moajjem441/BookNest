@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { authClient, useSession } from '@/lib/auth-client';
+import {  useSession } from '@/lib/auth-client';
 import { toast } from 'sonner';
 import { 
   BookOpen, 
