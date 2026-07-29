@@ -15,7 +15,8 @@ import {
   Bookmark, 
   LogOut, 
   LogIn,
-  UserPlus
+  UserPlus,
+  ShieldCheck
 } from "lucide-react";
 
 // Better Auth Client Import
@@ -38,7 +39,18 @@ const LOGGED_IN_NAV_ITEMS: NavItem[] = [
   { label: "Browse Books", href: "/books" },
   { label: "Share Book", href: "/share" },
   { label: "Dashboard", href: "/dashboard" },
-   { label: "About", href: "/about" },
+  { label: "About", href: "/about" },
+  { label: "Contact Us", href: "/contact" },
+];
+
+// ✅ Admin Nav Items
+const ADMIN_NAV_ITEMS: NavItem[] = [
+  { label: "Home", href: "/" },
+  { label: "Browse Books", href: "/books" },
+  { label: "Share Book", href: "/share" },
+  { label: "Manage Bookes", href: "/manage-books" },
+  { label: "Manage Requests", href: "/manage-requests" },
+  { label: "About", href: "/about" },
   { label: "Contact Us", href: "/contact" },
 ];
 
@@ -51,6 +63,9 @@ export default function Navbar() {
   
   const isAuthenticated = !!session;
   const isLoading = isPending;
+
+  // ✅ Check if the logged-in user is an admin
+  const isAdmin = session?.user?.role === "admin";
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -66,7 +81,7 @@ export default function Navbar() {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
-          router.push("/login"); // ← পরিবর্তন ১
+          router.push("/login");
           router.refresh();
         },
       },
@@ -99,7 +114,12 @@ export default function Navbar() {
     };
   }, []);
 
-  const currentNavItems = isAuthenticated ? LOGGED_IN_NAV_ITEMS : LOGGED_OUT_NAV_ITEMS;
+  // ✅ Select nav items based on authentication & admin role
+  const currentNavItems = !isAuthenticated 
+    ? LOGGED_OUT_NAV_ITEMS 
+    : isAdmin 
+      ? ADMIN_NAV_ITEMS 
+      : LOGGED_IN_NAV_ITEMS;
 
   return (
     <header
@@ -161,7 +181,6 @@ export default function Navbar() {
             </div>
           ) : isAuthenticated ? (
             <>
-
               {/* Profile Dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <button
@@ -173,8 +192,8 @@ export default function Navbar() {
                     <Image
                       src={session.user.image}
                       alt={session.user.name || "User Avatar"}
-                      width={88}
-                      height={88}
+                      width={28}
+                      height={28}
                       className="rounded-xl object-cover ring-1 ring-blue-400/40"
                     />
                   ) : (
@@ -197,10 +216,17 @@ export default function Navbar() {
                       className="absolute right-0 mt-3 w-56 rounded-2xl bg-slate-900/95 border border-slate-800 shadow-2xl backdrop-blur-2xl p-2 z-50 origin-top-right"
                     >
                       <div className="px-3 py-2 border-b border-slate-800 mb-1">
-                        <p className="text-sm font-semibold text-white truncate">
-                          {session?.user?.name || "User"}
-                        </p>
-                        <p className="text-xs text-slate-400 truncate">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-semibold text-white truncate">
+                            {session?.user?.name || "User"}
+                          </p>
+                          {isAdmin && (
+                            <span className="px-1.5 py-0.5 text-[10px] font-extrabold uppercase bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-md">
+                              Admin
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-400 truncate mt-0.5">
                           {session?.user?.email || ""}
                         </p>
                       </div>
@@ -213,23 +239,20 @@ export default function Navbar() {
                         >
                           <User className="w-4 h-4 text-blue-400" /> My Profile
                         </Link>
-                       
                       </div>
 
                       <div className="h-[1px] bg-slate-800 my-1" />
 
-                     
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer"
+                      >
+                        <LogOut className="w-4 h-4 text-red-400" /> Logout
+                      </button>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
-
-              <button
-                        onClick={handleSignOut}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
-                      >
-                        <LogOut className="w-4 h-4 text-red-400" /> Logout
-                      </button>
             </>
           ) : (
             <>
@@ -271,7 +294,7 @@ export default function Navbar() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsMobileOpen(false)}
-              className="fixed inset-0 bg-slate-950/80 backdrop-blur-lg z-50 md:hidden" // ← পরিবর্তন ২
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-lg z-50 md:hidden"
             />
 
             <motion.div
@@ -282,9 +305,16 @@ export default function Navbar() {
               className="fixed top-0 right-0 bottom-0 w-full max-w-xs sm:max-w-sm bg-gradient-to-b from-slate-900 via-slate-950 to-blue-950 border-l border-slate-800 shadow-2xl z-50 flex flex-col md:hidden p-6"
             >
               <div className="flex items-center justify-between pb-6 border-b border-slate-800">
-                <span className="font-bold text-lg bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-                  Menu
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-lg bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+                    Menu
+                  </span>
+                  {isAdmin && (
+                    <span className="px-2 py-0.5 text-[10px] font-extrabold uppercase bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-md">
+                      Admin
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={() => setIsMobileOpen(false)}
                   aria-label="Close menu"
@@ -325,7 +355,6 @@ export default function Navbar() {
                     >
                       <User className="w-5 h-5 text-blue-400" /> Profile
                     </Link>
-                   
                   </div>
                 )}
               </div>
@@ -334,7 +363,7 @@ export default function Navbar() {
                 {isAuthenticated ? (
                   <button
                     onClick={handleSignOut}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl text-sm font-semibold text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-colors"
+                    className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl text-sm font-semibold text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-colors cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" /> Logout
                   </button>

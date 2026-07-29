@@ -5,9 +5,6 @@ import { usePathname } from "next/navigation";
 import { 
   BookOpen, 
   Bookmark, 
-  PlusCircle, 
-  Settings, 
-  User,
   X,
   LifeBuoy,
   LogOut,
@@ -24,9 +21,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const navItems = [
     { name: "Shared Books", href: "/dashboard/shared-books", icon: BookOpen },
-    { name: "Added Books", href: "/dashboard/added-books", icon: PlusCircle },
     { name: "Borrowed Requests", href: "/dashboard/borrowed-requests", icon: Bookmark },
-    // { name: "Profile", href: "/dashboard/profile", icon: User },
+    
    
   ];
 
