@@ -7,7 +7,7 @@ import {
   Bookmark, 
   X,
   LifeBuoy,
-  LogOut,
+ Handshake,
   Sparkles
 } from "lucide-react";
 
@@ -22,6 +22,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const navItems = [
     { name: "Shared Books", href: "/dashboard/shared-books", icon: BookOpen },
     { name: "Borrowed Requests", href: "/dashboard/borrowed-requests", icon: Bookmark },
+    { name: "Borrowed Books", href: "/dashboard/borrowed-books", icon: Handshake },
     
    
   ];
