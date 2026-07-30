@@ -4,11 +4,15 @@ BookNest is a modern full-stack web application that enables users to share phys
 
 ---
 
-## 🌐 Live Demo
 
-* 🚀 **Live Site:** https://your-live-demo-link.com
+## 🚀 Live Site & Repository
+
+* 🚀 **Live Site:** https://booknest-eight-black.vercel.app
+* ⚙️ **Server Live API:** https://booknest-server-type-script.vercel.app
+
 * 💻 **Client Repository:** https://github.com/moajjem441/BookNest
-* ⚙️ **Server Repository:** https://github.com/moajjem441/BookNest-server
+* 🛠️ **Server Repository (TypeScript):** https://github.com/moajjem441/BookNest-server-TypeScript
+*  ⚙️ **Server Repository:** https://github.com/moajjem441/BookNest-server
 
 ---
 
