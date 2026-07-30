@@ -5,15 +5,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  BookOpen, 
-  Bell, 
-  Menu, 
-  X, 
-  User, 
-  LayoutDashboard, 
-  Bookmark, 
-  LogOut, 
+import {
+  BookOpen,
+  Bell,
+  Menu,
+  X,
+  User,
+  LayoutDashboard,
+  Bookmark,
+  LogOut,
   LogIn,
   UserPlus,
   ShieldCheck
@@ -60,7 +60,7 @@ export default function Navbar() {
 
   // Better Auth Session
   const { data: session, isPending } = useSession();
-  
+
   const isAuthenticated = !!session;
   const isLoading = isPending;
 
@@ -115,22 +115,21 @@ export default function Navbar() {
   }, []);
 
   // ✅ Select nav items based on authentication & admin role
-  const currentNavItems = !isAuthenticated 
-    ? LOGGED_OUT_NAV_ITEMS 
-    : isAdmin 
-      ? ADMIN_NAV_ITEMS 
+  const currentNavItems = !isAuthenticated
+    ? LOGGED_OUT_NAV_ITEMS
+    : isAdmin
+      ? ADMIN_NAV_ITEMS
       : LOGGED_IN_NAV_ITEMS;
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
           ? "py-3 bg-gradient-to-r from-slate-900/90 via-[#0F172A]/90 to-blue-950/90 backdrop-blur-xl border-b border-blue-500/20 shadow-lg shadow-blue-950/20"
           : "py-5 bg-gradient-to-r from-slate-950/70 via-slate-900/60 to-blue-950/70 backdrop-blur-md border-b border-white/10"
-      }`}
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        
+
         {/* Brand Logo */}
         <Link
           href="/"
@@ -153,11 +152,10 @@ export default function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative px-4 py-2 text-sm font-medium rounded-2xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  isActive
+                className={`relative px-4 py-2 text-sm font-medium rounded-2xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${isActive
                     ? "text-blue-400 font-semibold"
                     : "text-slate-300 hover:text-white"
-                }`}
+                  }`}
               >
                 {item.label}
                 {isActive && (
@@ -302,7 +300,8 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-full max-w-xs sm:max-w-sm bg-gradient-to-b from-slate-900 via-slate-950 to-blue-950 border-l border-slate-800 shadow-2xl z-50 flex flex-col md:hidden p-6"
+              // 👇 Solid bg-slate-950 যোগ করা হয়েছে এবং backdrop-blur প্রয়োগ করা হয়েছে
+              className="fixed top-0 right-0 bottom-0  h-[40vh] w-full max-w-xs sm:max-w-sm bg-slate-950/95 backdrop-blur-2xl border-l border-slate-800/80 shadow-2xl z-50 flex flex-col md:hidden p-6"
             >
               <div className="flex items-center justify-between pb-6 border-b border-slate-800">
                 <div className="flex items-center gap-2">
@@ -333,11 +332,10 @@ export default function Navbar() {
                         key={item.href}
                         href={item.href}
                         onClick={() => setIsMobileOpen(false)}
-                        className={`block px-4 py-3.5 rounded-2xl text-base font-medium transition-colors ${
-                          isActive
+                        className={`block px-4 py-3.5 rounded-2xl text-base font-medium transition-colors ${isActive
                             ? "bg-gradient-to-r from-blue-600/20 to-indigo-600/10 text-blue-400 font-semibold border border-blue-500/20"
                             : "text-slate-300 hover:bg-white/5"
-                        }`}
+                          }`}
                       >
                         {item.label}
                       </Link>
