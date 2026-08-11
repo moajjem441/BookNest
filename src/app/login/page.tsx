@@ -31,22 +31,36 @@ export default function LoginPage() {
   });
 
   // ✅ Auto-fill Demo Credentials
-  const handleDemoFill = (role: "admin" | "user") => {
-    if (role === "admin") {
-      setFormData({
-        email: "moajjem441@gmail.com",
-        password: "Moajjem1",
+  // const handleDemoFill = (role: "admin" | "user") => {
+  //   if (role === "admin") {
+  //     setFormData({
+  //       email: "moajjem441@gmail.com",
+  //       password: "Moajjem1",
        
-      });
-      toast.info("Demo Admin credentials auto-filled!", { id: "demo-toast" });
-    } else {
-      setFormData({
-        email: "naky@gmail.com",
-        password: "Naky1234",
-      });
-      toast.info("Demo User credentials auto-filled!", { id: "demo-toast" });
-    }
-  };
+  //     });
+  //     toast.info("Demo Admin credentials auto-filled!", { id: "demo-toast" });
+  //   } else {
+  //     setFormData({
+  //       email: "naky@gmail.com",
+  //       password: "Naky1234",
+  //     });
+  //     toast.info("Demo User credentials auto-filled!", { id: "demo-toast" });
+  //   }
+  // };
+
+
+
+  const handleDemoFill=()=>{
+    setFormData({
+      email:"naky@gmail.com",
+      password:"Naky1234"
+    })
+    toast.info("Demo User credentials auto-filled!", { id: "demo-toast" });
+  }
+  
+
+
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,13 +161,14 @@ export default function LoginPage() {
           <div className="mb-6 p-3.5 bg-slate-950/80 border border-slate-800 rounded-2xl space-y-2">
             <p className="text-[11px] font-medium text-slate-400">Quick Demo Credentials:</p>
             <div className="flex gap-2">
-              <button
+              {/* <button
                 type="button"
                 onClick={() => handleDemoFill("admin")}
                 className="flex-1 py-2 px-3 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
               >
                 <ShieldAlert className="w-3.5 h-3.5" /> Demo Admin
-              </button>
+              </button> */}
+
               <button
                 type="button"
                 onClick={() => handleDemoFill("user")}
