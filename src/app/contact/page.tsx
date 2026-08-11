@@ -38,7 +38,7 @@ export default function ContactPage() {
     {
       icon: <Mail className="w-5 h-5 text-blue-400" />,
       title: "Email Us",
-      value: "support@bookshare.com",
+      value: "moajjem@bookshare.com",
       subtext: "We respond within 24 hours.",
     },
     {
@@ -119,7 +119,7 @@ export default function ContactPage() {
                       required
                       value={formData.name}
                       onChange={handleChange}
-                      placeholder="John Doe"
+                      placeholder="Moajjem Hossain"
                       className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs sm:text-sm focus:outline-none focus:border-blue-500 transition-colors"
                     />
                   </div>
@@ -132,7 +132,7 @@ export default function ContactPage() {
                       required
                       value={formData.email}
                       onChange={handleChange}
-                      placeholder="john@example.com"
+                      placeholder="moajjem@example.com"
                       className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs sm:text-sm focus:outline-none focus:border-blue-500 transition-colors"
                     />
                   </div>
